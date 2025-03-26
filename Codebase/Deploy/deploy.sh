@@ -39,6 +39,7 @@ link_config() {
     local dst="$SITES_ENABLED/$domain"
     local cert_dir="$PROJECT_ROOT/certs/${domain}"
 
+    # Skip a known example config
     if [[ "$domain" == "example.com" ]]; then
         echo "Skipping example config: $domain"
         return
@@ -49,20 +50,23 @@ link_config() {
         return
     fi
 
-    # Check if the config contains SSL directives
+    # If the config contains SSL directives
     if grep -q "listen 443" "$src"; then
         if [ "$FORCE_NON_SSL" = true ]; then
-            echo "Linking $domain (SSL check bypassed)"
-            ln -sf "$src" "$dst"
-        elif [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
-            echo "Linked SSL-enabled site: $domain"
-            ln -sf "$src" "$dst"
+            echo "Deploying temporary non-SSL config for $domain"
+            # Strip SSL directives from the config and deploy it
+            sed '/listen 443/d;/ssl_/d;/fullchain.pem/d;/privkey.pem/d' "$src" > "$dst"
         else
-            echo "Skipping $domain — SSL certs not found at $cert_dir"
+            if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
+                ln -sf "$src" "$dst"
+                echo "Linked SSL-enabled site: $domain"
+            else
+                echo "Skipping $domain — SSL certs not found at $cert_dir"
+            fi
         fi
     else
-        echo "Linked: $domain"
         ln -sf "$src" "$dst"
+        echo "Linked: $domain"
     fi
 }
 
@@ -71,13 +75,11 @@ if [ "$#" -eq 0 ]; then
     echo "No domains specified. Deploying all from $SITES_AVAILABLE..."
     for file in "$SITES_AVAILABLE"/*; do
         domain=$(basename "$file")
-
         # Skip *.template files
         if [[ "$domain" == *.template ]]; then
             echo "Skipping template file: $domain"
             continue
         fi
-
         link_config "$domain"
     done
 else
@@ -90,7 +92,7 @@ else
     done
 fi
 
-# Test and reload
+# Test and reload Nginx
 echo ""
 echo "Testing Nginx configuration..."
 $NGINX_BIN -t -c "$NGINX_CONF"
