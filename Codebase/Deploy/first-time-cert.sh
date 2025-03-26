@@ -3,7 +3,7 @@
 set -e
 
 # Load project root from path.txt
-PATH_FILE="$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)/../Config/path.txt"
+PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
 if [ ! -f "$PATH_FILE" ]; then
     echo "path.txt not found at $PATH_FILE"
     exit 1
@@ -66,6 +66,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
 
     sudo certbot certonly --webroot -w "$ROOT_DIR" $(printf -- '-d %s ' "${DOMAINS[@]}") || {
         echo "Certbot failed for: ${DOMAINS[*]}"
+        continue
     }
 done
 
@@ -82,7 +83,7 @@ rm -f "$SITES_ENABLED"/*
 # Redeploy proper configs (with SSL)
 echo ""
 echo "Redeploying full site configs with SSL..."
-bash "$DEPLOY_SCRIPT" --force-non-ssl
+bash "$DEPLOY_SCRIPT"
 
 # Start final Nginx
 echo ""
