@@ -82,7 +82,7 @@ mkdir -p "$WEBROOT_DIR"
 chmod -R 755 "$PROJECT_ROOT/Codebase/Website"
 
 echo "Running first-time certificate generation..."
-bash "$FIRST_TIME_CERT_SCRIPT"
+bash "$FIRST_TIME_CERT_SCRIPT" --staging
 
 echo ""
 echo "All done. If certificates were successfully obtained, you can run:"

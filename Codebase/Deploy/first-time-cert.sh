@@ -2,6 +2,13 @@
 set -e
 CERTBOT_BIN=$(command -v certbot || echo "/root/.local/bin/certbot")
 
+# Support --staging flag
+USE_STAGING=false
+for arg in "$@"; do
+    if [[ "$arg" == "--staging" ]]; then
+        USE_STAGING=true
+    fi
+done
 
 # Load project root from path.txt
 PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
@@ -55,8 +62,8 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
         continue
     fi
 
-    DOMAIN_LINE=$(grep -E "^\s*server_name\s" "$tmpl" | sed -E 's/^\s*server_name\s+//;s/;$//' | cut -d'#' -f1 | xargs)
-    ROOT_LINE=$(grep -E "^\s*root\s" "$tmpl" | head -n1 | sed -E 's/^\s*root\s+//;s/;$//')
+    DOMAIN_LINE=$(grep -E "^\s*server_name\s" "$tmpl" | sed -E 's/^\s*server_name\s+//;s/;\$//' | cut -d'#' -f1 | xargs)
+    ROOT_LINE=$(grep -E "^\s*root\s" "$tmpl" | head -n1 | sed -E 's/^\s*root\s+//;s/;\$//')
 
     if [ -z "$DOMAIN_LINE" ] || [ -z "$ROOT_LINE" ]; then
         continue
@@ -73,11 +80,17 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
 
     for DOMAIN in "${DOMAINS[@]}"; do
         echo -e "\n → Requesting cert for: $DOMAIN"
-        sudo "$CERTBOT_BIN" certonly --webroot \
+        CMD=(sudo "$CERTBOT_BIN" certonly --webroot \
             --config-dir /etc/letsencrypt \
             --work-dir /var/lib/letsencrypt \
             --logs-dir /var/log/letsencrypt \
-            -w "$ROOT_DIR" -d "$DOMAIN" || {
+            -w "$ROOT_DIR" -d "$DOMAIN")
+
+        if $USE_STAGING; then
+            CMD+=(--server https://acme-staging-v02.api.letsencrypt.org/directory)
+        fi
+
+        "${CMD[@]}" || {
             echo "Certbot failed for: $DOMAIN"
             continue
         }
@@ -113,6 +126,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
         echo "No certs found for $domain_name; restoring temporary non-SSL config..."
         cp "$TEMP_NON_SSL_DIR/$domain_name" "$dest_conf"
     fi
+
 done
 
 # Start final Nginx with SSL configs (if certs were issued)
