@@ -15,7 +15,7 @@ http {
     keepalive_timeout  65;
 
     #access_log logs/access.log;
-    error_log logs/error.log;
+    error_log {{PROJECT_PATH}}/logs/error.log;
 
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
