@@ -34,35 +34,34 @@ link_config() {
 
     echo "Processing domain: $domain"
 
-    # Skip if this is the literal 'example.com' config
+    # Sanity check for example.com
     if [[ "$domain" == "example.com" ]]; then
         echo "Skipping example config: $domain"
         return
     fi
 
-    # No config file found? Skip.
+    # Ensure the file exists
     if [ ! -f "$src" ]; then
         echo "Config not found: $src"
         return
     fi
 
-    # If config defines HTTPS, check for certs
     if grep -q "listen 443" "$src"; then
-        if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
-            # SSL certs exist => keep full config
+        if [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
+            echo "SSL certs exist for $domain — linking full config"
             ln -sf "$src" "$dst"
-            echo "Linked full SSL-enabled site: $domain"
         else
-            echo "No SSL certs for $domain — stripping SSL lines, keeping port 80 only"
-            sed '/listen 443/d;/ssl_/d;/fullchain.pem/d;/privkey.pem/d' "$src" > "$dst"
-            echo "Deployed partial HTTP config for $domain"
+            echo "No certs found for $domain — stripping SSL blocks"
+            sed '/listen 443/,/}/d;/ssl_/d' "$src" > "$dst"
         fi
     else
-        # No SSL defined in config — just link it
+        echo "No HTTPS block in $domain config — linking as-is"
         ln -sf "$src" "$dst"
-        echo "Linked non-SSL config for: $domain"
     fi
+
+    echo "Done: $domain → $(realpath "$dst")"
 }
+
 
 
 # Deploy all or selected domains
