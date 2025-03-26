@@ -1,4 +1,8 @@
 #!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+INSTALL_DIR="$PROJECT_ROOT/nginx"
+SRC_DIR="$PROJECT_ROOT/.nginx-src"
 
 set -e
 
@@ -62,7 +66,4 @@ fi
 
 echo ""
 echo "Nginx has been installed to: $INSTALL_DIR"
-echo ""
-echo "To start Nginx with your local config, run:"
-echo "   bash start-nginx.sh"
 echo ""

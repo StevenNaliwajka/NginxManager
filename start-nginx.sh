@@ -8,7 +8,7 @@ NGINX_CONF="$(pwd)/Config/nginx.conf"
 PID_FILE="/tmp/nginx-local.pid"
 
 if [ ! -f "$NGINX_BIN" ]; then
-    echo "Nginx not found. Run ./install-nginx.sh first."
+    echo "Nginx not found. Run ./setup.sh first."
     exit 1
 fi
 
