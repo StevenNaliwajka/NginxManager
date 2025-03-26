@@ -73,9 +73,14 @@ echo "Setup complete!"
 echo "You can check certs at: /etc/letsencrypt/live/<your-domain>"
 echo ""
 
-# -----------------------------------------------
-# Call first-time-cert.sh after everything else
-# -----------------------------------------------
+
+# Ensure webroot for Certbot exists
+WEBROOT_DIR="$PROJECT_ROOT/Codebase/Website/.well-known/acme-challenge"
+echo ""
+echo "Ensuring webroot directory for Certbot exists at: $WEBROOT_DIR"
+mkdir -p "$WEBROOT_DIR"
+chmod -R 755 "$PROJECT_ROOT/Codebase/Website"
+
 echo "Running first-time certificate generation..."
 bash "$FIRST_TIME_CERT_SCRIPT"
 
