@@ -48,6 +48,18 @@ make install
 # Return to project root
 cd "$PROJECT_ROOT"
 
+# Copy default mime.types to your config folder if it doesn't exist
+DEFAULT_MIME_SOURCE="$INSTALL_DIR/conf/mime.types"
+CUSTOM_MIME_TARGET="$PROJECT_ROOT/Config/mime.types"
+
+if [ -f "$DEFAULT_MIME_SOURCE" ]; then
+    echo "Copying default mime.types to Config/"
+    cp "$DEFAULT_MIME_SOURCE" "$CUSTOM_MIME_TARGET"
+else
+    echo "mime.types not found at $DEFAULT_MIME_SOURCE — skipping copy"
+fi
+
+
 echo ""
 echo "Nginx has been installed to: $INSTALL_DIR"
 echo ""

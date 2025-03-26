@@ -176,3 +176,4 @@ cython_debug/
 
 Config/sites-available/*
 !Config/sites-available/example.com
+nginx
