@@ -27,7 +27,6 @@ cp -f "$SITES_ENABLED"/* "$TEMP_NON_SSL_DIR" 2>/dev/null || true
 echo ""
 echo "Creating temporary non-SSL site configs for Certbot..."
 
-# For each template file, generate a non-SSL version by stripping out SSL directives.
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     domain_name=$(basename "$tmpl" .template)
     output_path="$SITES_ENABLED/$domain_name"
@@ -64,7 +63,6 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
     echo -e "\n → Requesting cert for: ${DOMAINS[*]}"
     echo "   Using webroot: $ROOT_DIR"
 
-    # Run Certbot to request the certificate. (This will only succeed if port 80 is accessible.)
     sudo certbot certonly --webroot -w "$ROOT_DIR" $(printf -- '-d %s ' "${DOMAINS[@]}") || {
         echo "Certbot failed for: ${DOMAINS[*]}"
         continue
@@ -77,26 +75,12 @@ echo "Stopping temporary Nginx..."
 bash "$STOP_SCRIPT"
 sleep 2
 
-# Redeploy proper configs:
-# For each template, if the certificate files exist in the expected cert directory,
-# deploy the full SSL-enabled config; otherwise, restore the temporary non-SSL config.
+# Redeploy proper configs (with SSL enabled) using temporary non-SSL override
 echo ""
-echo "Redeploying site configs..."
-for tmpl in "$TEMPLATE_DIR"/*.template; do
-    domain=$(basename "$tmpl" .template)
-    cert_dir="$PROJECT_ROOT/certs/$domain"
-    dest_conf="$SITES_ENABLED/$domain"
+echo "Redeploying full site configs with SSL (forcing non-SSL temporary mode)..."
+bash "$DEPLOY_SCRIPT" --force-non-ssl
 
-    if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
-        echo "Deploying SSL-enabled config for $domain"
-        bash "$DEPLOY_SCRIPT" "$domain"
-    else
-        echo "No certs found for $domain; restoring temporary non-SSL config..."
-        cp "$TEMP_NON_SSL_DIR/$domain" "$dest_conf"
-    fi
-done
-
-# Start final Nginx with proper SSL-enabled configs (if available)
+# Start final Nginx with proper SSL-enabled configs (certs should now be in place)
 echo ""
 echo "Starting Nginx with final configuration..."
 bash "$START_SCRIPT"
