@@ -57,14 +57,17 @@ bash "$CERTBOT_SCRIPT"
 echo ""
 echo "Ensuring daily Certbot renewal cronjob exists..."
 
-# Check if job exists already
-( crontab -l 2>/dev/null | grep -F "$CRON_JOB" ) >/dev/null
-if [ $? -ne 0 ]; then
-    echo "Adding daily cert renewal job to crontab..."
-    (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
-else
+# Get current crontab, or empty if none
+CURRENT_CRONTAB=$(crontab -l 2>/dev/null || true)
+
+# Check if it's already present
+if echo "$CURRENT_CRONTAB" | grep -F "$CRON_JOB" >/dev/null; then
     echo "Cronjob for cert renewal already exists."
+else
+    echo "Adding daily cert renewal job to crontab..."
+    (echo "$CURRENT_CRONTAB"; echo "$CRON_JOB") | crontab -
 fi
+
 
 # Run cert check immediately after setup
 echo ""
