@@ -17,6 +17,7 @@ NGINX_CONF="$PROJECT_ROOT/Codebase/Config/nginx.conf"
 STOP_SCRIPT="$PROJECT_ROOT/stop-nginx.sh"
 DEPLOY_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/deploy.sh"
 START_SCRIPT="$PROJECT_ROOT/start-nginx.sh"
+GEN_SITES_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/generate-sites.sh"
 
 # Ensure necessary directories exist
 mkdir -p "$SITES_ENABLED"
@@ -31,7 +32,7 @@ echo "Starting Nginx temporarily to allow cert issuance..."
 "$NGINX_BIN" -c "$NGINX_CONF"
 sleep 2
 
-# 2) Run Certbot for each valid template except example.com.template
+# Run Certbot for each valid template except example.com.template
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     domain_name=$(basename "$tmpl" .template)
 
@@ -41,7 +42,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
         continue
     fi
 
-    DOMAIN_LINE=$(grep -E "^\s*server_name\s" "$tmpl" | sed -E 's/^\s*server_name\s+//;s/;$//')
+    DOMAIN_LINE=$(grep -E "^\s*server_name\s" "$tmpl" | sed -E 's/^\s*server_name\s+//;s/;$//' | cut -d'#' -f1 | xargs)
     ROOT_LINE=$(grep -E "^\s*root\s" "$tmpl" | head -n1 | sed -E 's/^\s*root\s+//;s/;$//')
 
     if [ -z "$DOMAIN_LINE" ] || [ -z "$ROOT_LINE" ]; then
@@ -87,7 +88,12 @@ echo "Stopping temporary Nginx..."
 bash "$STOP_SCRIPT"
 sleep 2
 
-# 3) Redeploy proper SSL configs if certs exist; else restore non-SSL
+# Regenerate site configs now that certs may exist
+echo ""
+echo "Regenerating site configs with SSL (if certs exist)..."
+bash "$GEN_SITES_SCRIPT"
+
+# Redeploy proper SSL configs if certs exist; else restore non-SSL
 echo ""
 echo "Redeploying site configs..."
 for tmpl in "$TEMPLATE_DIR"/*.template; do
@@ -111,7 +117,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
     fi
 done
 
-# 4) Start final Nginx with SSL configs (if certs were issued)
+# Start final Nginx with SSL configs (if certs were issued)
 echo ""
 echo "Starting Nginx with final configuration..."
 bash "$START_SCRIPT"
