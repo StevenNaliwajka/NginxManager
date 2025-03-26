@@ -11,7 +11,7 @@ for arg in "$@"; do
 done
 
 # Load project root from path.txt
-PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
+PATH_FILE="$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)/../Config/path.txt"
 if [ ! -f "$PATH_FILE" ]; then
     echo "path.txt not found at $PATH_FILE"
     exit 1
@@ -24,7 +24,6 @@ TEMP_NON_SSL_DIR="$PROJECT_ROOT/.tmp-non-ssl"
 NGINX_BIN="$PROJECT_ROOT/nginx/sbin/nginx"
 NGINX_CONF="$PROJECT_ROOT/Codebase/Config/nginx.conf"
 STOP_SCRIPT="$PROJECT_ROOT/stop-nginx.sh"
-DEPLOY_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/deploy.sh"
 START_SCRIPT="$PROJECT_ROOT/start-nginx.sh"
 GEN_SITES_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/generate-sites.sh"
 
@@ -43,6 +42,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
     non_ssl_path="$TEMP_NON_SSL_DIR/$domain_name"
     sed '/listen 443/,/}/d' "$TEMPLATE_DIR/$domain_name" > "$non_ssl_path"
     cp "$non_ssl_path" "$SITES_ENABLED/$domain_name"
+
 done
 
 echo ""
@@ -86,7 +86,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
             --logs-dir /var/log/letsencrypt \
             -w "$ROOT_DIR" -d "$DOMAIN")
 
-        if $USE_STAGING; then
+        if \$USE_STAGING; then
             CMD+=(--server https://acme-staging-v02.api.letsencrypt.org/directory)
         fi
 
@@ -106,28 +106,6 @@ sleep 2
 # Regenerate site configs now that certs may exist
 echo "\nRegenerating site configs with SSL (if certs exist)..."
 bash "$GEN_SITES_SCRIPT"
-
-# Redeploy proper SSL configs if certs exist; else restore non-SSL
-echo "\nRedeploying site configs..."
-for tmpl in "$TEMPLATE_DIR"/*.template; do
-    domain_name=$(basename "$tmpl" .template)
-
-    if [[ "$domain_name" == "example.com" ]]; then
-        continue
-    fi
-
-    cert_path="/etc/letsencrypt/live/$domain_name"
-    dest_conf="$SITES_ENABLED/$domain_name"
-
-    if [ -d "$cert_path" ] && [ -f "$cert_path/fullchain.pem" ] && [ -f "$cert_path/privkey.pem" ]; then
-        echo "Deploying SSL-enabled config for $domain_name"
-        bash "$DEPLOY_SCRIPT" "$domain_name"
-    else
-        echo "No certs found for $domain_name; restoring temporary non-SSL config..."
-        cp "$TEMP_NON_SSL_DIR/$domain_name" "$dest_conf"
-    fi
-
-done
 
 # Start final Nginx with SSL configs (if certs were issued)
 echo "\nStarting Nginx with final configuration..."
