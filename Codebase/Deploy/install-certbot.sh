@@ -11,27 +11,26 @@ fi
 
 PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
 
-echo "Installing Certbot v2.0.0 system-wide using pip..."
+echo "Installing Certbot v2.0.0 using pipx (isolated)..."
 
-# Remove apt-installed certbot if present
+# Remove apt certbot
 sudo apt remove -y certbot || true
 
-# Ensure python3-pip is installed
-if ! command -v pip3 &>/dev/null; then
-    echo "pip3 not found. Installing python3-pip..."
+# Install pipx if missing
+if ! command -v pipx &>/dev/null; then
+    echo "Installing pipx..."
     sudo apt update
-    sudo apt install -y python3-pip
+    sudo apt install -y pipx
+    pipx ensurepath
 fi
 
-# Upgrade pip
-echo "Upgrading pip..."
-sudo python3 -m pip install --upgrade pip
+# Ensure pipx is on PATH
+export PATH="$PATH:$HOME/.local/bin:/root/.local/bin"
 
-# Install certbot 2.0.0 globally
-echo "Installing Certbot v2.0.0..."
-sudo python3 -m pip install --upgrade "certbot==2.0.0"
+# Install certbot in pipx-managed environment
+pipx install --force certbot==2.0.0
 
-# Confirm it's installed correctly
+# Check certbot version
 if certbot --version 2>/dev/null | grep -q "2.0.0"; then
     echo ""
     echo "Certbot 2.0.0 installed successfully!"
