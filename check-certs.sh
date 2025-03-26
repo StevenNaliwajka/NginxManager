@@ -3,7 +3,7 @@
 set -e
 
 # Load project root from path.txt
-PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
+PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/Codebase/Config/path.txt"
 if [ ! -f "$PATH_FILE" ]; then
     echo "path.txt not found at $PATH_FILE"
     exit 1
