@@ -30,9 +30,12 @@ link_config() {
     local domain="$1"
     local src="$SITES_AVAILABLE/$domain"
     local dst="$SITES_ENABLED/$domain"
-    cert_dir="/etc/letsencrypt/live/${domain}"
+    local cert_dir="/etc/letsencrypt/live/${domain}"
 
-if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
+    echo "Processing domain: $domain"
+
+    # Skip if this is the literal 'example.com' config
+    if [[ "$domain" == "example.com" ]]; then
         echo "Skipping example config: $domain"
         return
     fi
@@ -43,36 +46,24 @@ if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/pri
         return
     fi
 
-    # Does this config define an SSL server block (listen 443 ssl)?
+    # If config defines HTTPS, check for certs
     if grep -q "listen 443" "$src"; then
-
-        # 1) Deploy the fallback HTTP block from the same file, if it exists
-        #    i.e., lines with `listen 80;` remain intact. So your site can at least run on port 80.
-        # 2) If we also have valid certs in cert_dir, then keep the 443 block too.
-        #    If certs are missing, we comment out or remove the 443 portion so it won't break Nginx.
-
-        # The simplest approach is:
-        #    * Always keep the entire file as-is (port 80 + port 443).
-        #    * If certs do not exist, comment out the SSL lines.
-        # That way, you get a working :80 server block AND the :443 block only if certs exist.
-
         if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
-            # SSL certs exist => keep entire config
+            # SSL certs exist => keep full config
             ln -sf "$src" "$dst"
             echo "Linked full SSL-enabled site: $domain"
         else
-            echo "No SSL certs for $domain => stripping SSL lines, but leaving port 80"
-
-            # create a version of the config that has 443 lines removed
+            echo "No SSL certs for $domain — stripping SSL lines, keeping port 80 only"
             sed '/listen 443/d;/ssl_/d;/fullchain.pem/d;/privkey.pem/d' "$src" > "$dst"
-            echo "Deployed partial HTTP config for $domain"
+            echo "🪛 Deployed partial HTTP config for $domain"
         fi
     else
-        # No mention of 443 => straightforward symlink
+        # No SSL defined in config — just link it
         ln -sf "$src" "$dst"
-        echo "Linked: $domain"
+        echo "Linked non-SSL config for: $domain"
     fi
 }
+
 
 # Deploy all or selected domains
 if [ "$#" -eq 0 ]; then
