@@ -1,5 +1,7 @@
 #!/bin/bash
 set -e
+CERTBOT_BIN=$(command -v certbot || echo "/root/.local/bin/certbot")
+
 
 # Load project root from path.txt
 PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
@@ -71,7 +73,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
 
     for DOMAIN in "${DOMAINS[@]}"; do
         echo -e "\n → Requesting cert for: $DOMAIN"
-        sudo certbot certonly --webroot \
+        sudo "$CERTBOT_BIN" certonly --webroot \
             --config-dir /etc/letsencrypt \
             --work-dir /var/lib/letsencrypt \
             --logs-dir /var/log/letsencrypt \
