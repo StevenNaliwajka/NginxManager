@@ -3,7 +3,7 @@
 set -e
 
 # Read project root from path.txt
-PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
+PATH_FILE="$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)/../Config/path.txt"
 if [ ! -f "$PATH_FILE" ]; then
     echo "path.txt not found at $PATH_FILE"
     exit 1
@@ -36,14 +36,25 @@ link_config() {
 
     local src="$SITES_AVAILABLE/$domain"
     local dst="$SITES_ENABLED/$domain"
+    local cert_dir="$PROJECT_ROOT/certs/${domain}"
 
     if [ ! -f "$src" ]; then
         echo "Config not found: $src"
         return
     fi
 
-    ln -sf "$src" "$dst"
-    echo "Linked: $domain"
+    # Check if the config requires SSL (port 443)
+    if grep -q "listen 443 ssl" "$src"; then
+        if [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
+            ln -sf "$src" "$dst"
+            echo "Linked SSL-enabled site: $domain"
+        else
+            echo "Skipping $domain — SSL certs not found at $cert_dir"
+        fi
+    else
+        ln -sf "$src" "$dst"
+        echo "Linked: $domain"
+    fi
 }
 
 # Deploy all or selected domains

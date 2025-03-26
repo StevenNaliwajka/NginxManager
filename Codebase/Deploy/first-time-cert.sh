@@ -11,9 +11,12 @@ fi
 
 PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
 TEMPLATE_DIR="$PROJECT_ROOT/Codebase/Sites/sites-available"
+START_SCRIPT="$PROJECT_ROOT/start-nginx.sh"
 
 echo ""
 echo "Attempting to generate SSL certs from .template configs..."
+
+ANY_SUCCESS=false
 
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     # Extract server_name and root lines
@@ -32,12 +35,22 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
     # Convert space-separated domains into array
     IFS=' ' read -r -a DOMAINS <<< "$DOMAIN_LINE"
 
-    echo "\n → Requesting cert for: ${DOMAINS[*]}"
+    echo -e "\n → Requesting cert for: ${DOMAINS[*]}"
     echo "   Using webroot: $ROOT_DIR"
 
-    sudo certbot certonly --webroot -w "$ROOT_DIR" $(printf -- '-d %s ' "${DOMAINS[@]}") || {
+    if sudo certbot certonly --webroot -w "$ROOT_DIR" $(printf -- '-d %s ' "${DOMAINS[@]}"); then
+        ANY_SUCCESS=true
+    else
         echo "Certbot failed for: ${DOMAINS[*]}"
-    }
+    fi
 done
 
-echo "\nFirst-time cert request complete."
+echo -e "\nFirst-time cert request complete."
+
+# Restart Nginx if any certs were successfully created
+if $ANY_SUCCESS; then
+    echo "Restarting Nginx now that certs are in place..."
+    sudo bash "$START_SCRIPT"
+else
+    echo "No certs were issued. Nginx will not be restarted."
+fi
