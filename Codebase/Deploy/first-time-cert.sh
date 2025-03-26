@@ -29,9 +29,9 @@ echo "Creating temporary non-SSL site configs for Certbot..."
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     domain_name=$(basename "$tmpl" .template)
 
-    # Skip example.com.template
-    if [ "$domain_name" = "example.com" ]; then
-        echo "Skipping $tmpl because it's the example domain."
+    # Skip example.com
+    if [[ "$domain_name" == "example.com" ]]; then
+        echo "Skipping config/certbot steps for $domain_name."
         continue
     fi
 
@@ -55,9 +55,9 @@ sleep 2
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     domain_name=$(basename "$tmpl" .template)
 
-    # Skip example.com.template
-    if [ "$domain_name" = "example.com" ]; then
-        echo "Skipping certbot for $tmpl (example domain)."
+    # Skip example.com
+    if [[ "$domain_name" == "example.com" ]]; then
+        echo "Skipping config/certbot steps for $domain_name."
         continue
     fi
 
@@ -99,9 +99,9 @@ echo "Redeploying site configs..."
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     domain_name=$(basename "$tmpl" .template)
 
-    # Skip example.com.template
-    if [ "$domain_name" = "example.com" ]; then
-        echo "Skipping final deploy for example.com."
+    # Skip example.com
+    if [[ "$domain_name" == "example.com" ]]; then
+        echo "Skipping config/certbot steps for $domain_name."
         continue
     fi
 
