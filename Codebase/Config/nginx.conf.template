@@ -4,9 +4,11 @@ events {
     worker_connections  1024;
 }
 
-pid {{PROJECT_PATH}}/logs/nginx.pid;
+# Write the PID file to /tmp/nginx-local.pid so that your status and stop scripts can find it.
+pid /tmp/nginx-local.pid;
 
 http {
+    # Pull in MIME types from your local config
     include       {{PROJECT_PATH}}/Codebase/Config/mime.types;
     default_type  application/octet-stream;
 
@@ -14,11 +16,14 @@ http {
     tcp_nopush      on;
     keepalive_timeout  65;
 
-    #access_log logs/access.log;
+    # Optional access log is commented out for now
+    #access_log {{PROJECT_PATH}}/logs/access.log;
     error_log {{PROJECT_PATH}}/logs/error.log;
 
+    # Enable basic compression
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 
+    # Include your site configs
     include {{PROJECT_PATH}}/Codebase/Sites/sites-enabled/*;
 }
