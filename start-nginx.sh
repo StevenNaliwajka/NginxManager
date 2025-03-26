@@ -3,13 +3,20 @@
 set -e
 cd "$(dirname "$0")"
 
-PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+# Read dynamic project path
+PATH_FILE="Codebase/Config/path.txt"
+if [ ! -f "$PATH_FILE" ]; then
+    echo "path.txt not found at $PATH_FILE"
+    exit 1
+fi
+
+PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
 NGINX_BIN="$PROJECT_ROOT/nginx/sbin/nginx"
 NGINX_CONF="$PROJECT_ROOT/Codebase/Config/nginx.conf"
 PID_FILE="/tmp/nginx-local.pid"
+DEPLOY_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/deploy.sh"
 
 # Run deploy before start
-DEPLOY_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/deploy.sh"
 if [ -f "$DEPLOY_SCRIPT" ]; then
     echo "Deploying site configs before starting Nginx..."
     bash "$DEPLOY_SCRIPT"

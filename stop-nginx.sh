@@ -1,6 +1,15 @@
 #!/bin/bash
 
-PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+set -e
+
+# Read dynamic project path
+PATH_FILE="Codebase/Config/path.txt"
+if [ ! -f "$PATH_FILE" ]; then
+    echo "path.txt not found at $PATH_FILE"
+    exit 1
+fi
+
+PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
 PID_FILE="/tmp/nginx-local.pid"
 
 echo "Stopping Nginx..."

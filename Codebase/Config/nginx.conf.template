@@ -1,0 +1,24 @@
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+pid /tmp/nginx-local.pid;
+
+http {
+    include       {{PROJECT_PATH}}/Codebase/Config/mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    tcp_nopush      on;
+    keepalive_timeout  65;
+
+    #access_log logs/access.log;
+    error_log logs/error.log;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    include {{PROJECT_PATH}}/Codebase/Sites/sites-enabled/*;
+}

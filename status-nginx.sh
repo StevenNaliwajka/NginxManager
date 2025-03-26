@@ -1,6 +1,15 @@
 #!/bin/bash
 
-PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+set -e
+
+# Read dynamic project root path
+PATH_FILE="Codebase/Config/path.txt"
+if [ ! -f "$PATH_FILE" ]; then
+    echo "path.txt not found at $PATH_FILE"
+    exit 1
+fi
+
+PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
 PID_FILE="/tmp/nginx-local.pid"
 NGINX_BIN="$PROJECT_ROOT/nginx/sbin/nginx"
 
@@ -17,7 +26,7 @@ if [ -f "$PID_FILE" ]; then
 else
     echo "No PID file found at $PID_FILE."
 
-    # Fallback: try to detect by binary
+    # Fallback: check if Nginx is running using binary
     if pgrep -f "$NGINX_BIN" > /dev/null 2>&1; then
         PID=$(pgrep -f "$NGINX_BIN")
         echo "Nginx appears to be running (PID: $PID), but no PID file exists."

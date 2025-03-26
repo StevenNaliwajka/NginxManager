@@ -2,9 +2,16 @@
 
 set -e
 
-# Dynamically determine paths
+# Dynamically determine project path
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+PATH_FILE="$SCRIPT_DIR/../Config/path.txt"
+
+if [ ! -f "$PATH_FILE" ]; then
+    echo "Missing path.txt at $PATH_FILE"
+    exit 1
+fi
+
+PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
 INSTALL_DIR="$PROJECT_ROOT/nginx"
 SRC_DIR="$PROJECT_ROOT/.nginx-src"
 NGINX_VERSION="1.25.3"
@@ -22,9 +29,8 @@ REQUIRED_PACKAGES=(
 echo "Installing Nginx $NGINX_VERSION locally into: $INSTALL_DIR"
 echo ""
 
-# Install required dependencies
+# Install required packages
 echo "Installing required packages..."
-# Use sudo only if not already root
 SUDO=""
 if [ "$EUID" -ne 0 ]; then
     SUDO="sudo"
@@ -40,7 +46,7 @@ cd "$SRC_DIR"
 
 # Download Nginx source if not already present
 if [ ! -f "nginx-$NGINX_VERSION.tar.gz" ]; then
-    echo "⬇Downloading Nginx source..."
+    echo "⬇ Downloading Nginx source..."
     curl -O "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 fi
 
@@ -54,7 +60,7 @@ echo "Building Nginx..."
 make
 make install
 
-# Copy mime.types into your Config directory
+# Copy mime.types into Config/
 MIME_SRC="$INSTALL_DIR/conf/mime.types"
 MIME_DEST="$PROJECT_ROOT/Codebase/Config/mime.types"
 
@@ -62,15 +68,13 @@ if [ -f "$MIME_SRC" ]; then
     echo "Copying mime.types to Config/"
     cp "$MIME_SRC" "$MIME_DEST"
 else
-    echo "mime.types not found in $MIME_SRC — skipping copy"
+    echo "mime.types not found at $MIME_SRC — skipping copy"
 fi
 
-# Return to root
+# Return to project root
 cd "$PROJECT_ROOT"
 
 echo ""
 echo "Nginx installed successfully to: $INSTALL_DIR"
-echo ""
-echo "To start Nginx with your local config, run:"
+echo "To start Nginx with your config, run:"
 echo "    bash start-nginx.sh"
-echo ""
