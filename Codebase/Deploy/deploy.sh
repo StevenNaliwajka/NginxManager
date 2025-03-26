@@ -30,10 +30,9 @@ link_config() {
     local domain="$1"
     local src="$SITES_AVAILABLE/$domain"
     local dst="$SITES_ENABLED/$domain"
-    local cert_dir="$PROJECT_ROOT/certs/${domain}"
+    cert_dir="/etc/letsencrypt/live/${domain}"
 
-    # Skip example config
-    if [[ "$domain" == "example.com" ]]; then
+if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
         echo "Skipping example config: $domain"
         return
     fi
