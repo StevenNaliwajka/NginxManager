@@ -1,35 +1,31 @@
-# HTTP: redirect to HTTPS (optional but recommended)
+# HTTP: redirect to HTTPS (still fine)
 server {
     listen 80;
-    server_name example.com www.example.com;    ### UPDATE HERE
+    server_name example.com www.example.com;    ###UPDATE
 
     location ~ ^/.well-known/acme-challenge/ {
-        root {{PROJECT_PATH}}/Codebase/Website;
+        root /opt/frontend-gateway/Codebase/Website;
         allow all;
     }
 
-    # Redirect all other HTTP to HTTPS
     location / {
         return 301 https://$host$request_uri;
     }
 
-    access_log {{PROJECT_PATH}}/logs/example_http_access.log;    ### UPDATE HERE
-    error_log  {{PROJECT_PATH}}/logs/example_http_error.log;    ### UPDATE HERE
+    access_log /opt/frontend-gateway/logs/example_http_access.log;    ###UPDATE
+    error_log  /opt/frontend-gateway/logs/example_http_error.log;    ###UPDATE
 }
 
-# HTTPS reverse proxy
+# HTTPS: Reverse Proxy + SSL
 server {
     listen 443 ssl;
-    server_name example.com www.example.com;    ### UPDATE HERE
+    server_name example.com www.example.com;    ###UPDATE
 
-    ssl_certificate     {{PROJECT_PATH}}/certs/example.com/fullchain.pem;    ### UPDATE HERE
-    ssl_certificate_key {{PROJECT_PATH}}/certs/example.com/privkey.pem;    ### UPDATE HERE
-
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;    ###UPDATE
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;    ###UPDATE
 
     location / {
-        proxy_pass http://192.168.xxx.xxx;    ### UPDATE HERE
+        proxy_pass http://192.168.30.104;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -37,10 +33,10 @@ server {
     }
 
     location ~ ^/.well-known/acme-challenge/ {
-        root {{PROJECT_PATH}}/Codebase/Website;
+        root /opt/frontend-gateway/Codebase/Website;
         allow all;
     }
 
-    access_log {{PROJECT_PATH}}/logs/example_ssl_access.log;    ### UPDATE HERE
-    error_log  {{PROJECT_PATH}}/logs/example_ssl_error.log;    ### UPDATE HERE
+    access_log /opt/frontend-gateway/logs/example_https_access.log;    ###UPDATE
+    error_log  /opt/frontend-gateway/logs/example_https_error.log;    ###UPDATE
 }
