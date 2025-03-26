@@ -28,6 +28,7 @@ cp -f "$SITES_ENABLED"/* "$TEMP_NON_SSL_DIR" 2>/dev/null || true
 echo ""
 echo "Creating temporary non-SSL site configs for Certbot..."
 
+# Create non-SSL site configurations
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     domain_name=$(basename "$tmpl" .template)
     output_path="$SITES_ENABLED/$domain_name"
@@ -64,6 +65,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
     echo -e "\n → Requesting cert for: ${DOMAINS[*]}"
     echo "   Using webroot: $ROOT_DIR"
 
+    # Request SSL certificates from Certbot
     sudo certbot certonly --webroot -w "$ROOT_DIR" $(printf -- '-d %s ' "${DOMAINS[@]}") || {
         echo "Certbot failed for: ${DOMAINS[*]}"
         continue
@@ -80,12 +82,12 @@ sleep 2
 echo "Cleaning up temporary non-SSL configs..."
 rm -f "$SITES_ENABLED"/*
 
-# Redeploy proper configs (with SSL)
+# Redeploy proper SSL-enabled configs
 echo ""
 echo "Redeploying full site configs with SSL..."
-bash "$DEPLOY_SCRIPT"
+bash "$DEPLOY_SCRIPT" --force-non-ssl
 
-# Start final Nginx
+# Start final Nginx with SSL certificates
 echo ""
 echo "Starting Nginx with full SSL setup..."
 bash "$START_SCRIPT"
