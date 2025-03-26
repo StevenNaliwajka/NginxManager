@@ -16,11 +16,20 @@ echo "Installing Certbot v2.0.0 system-wide using pip..."
 # Remove apt-installed certbot if present
 sudo apt remove -y certbot || true
 
+# Ensure python3-pip is installed
+if ! command -v pip3 &>/dev/null; then
+    echo "pip3 not found. Installing python3-pip..."
+    sudo apt update
+    sudo apt install -y python3-pip
+fi
+
 # Upgrade pip
+echo "Upgrading pip..."
 sudo python3 -m pip install --upgrade pip
 
 # Install certbot 2.0.0 globally
-sudo python3 -m pip install certbot==2.0.0
+echo "Installing Certbot v2.0.0..."
+sudo python3 -m pip install --upgrade "certbot==2.0.0"
 
 # Confirm it's installed correctly
 if certbot --version 2>/dev/null | grep -q "2.0.0"; then
