@@ -11,25 +11,18 @@ fi
 
 PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
 
-echo "Installing Certbot v2.0.0 system-wide using pipx..."
+echo "Installing Certbot v2.0.0 system-wide using pip..."
 
-# Remove any apt-installed Certbot
+# Remove apt-installed certbot if present
 sudo apt remove -y certbot || true
 
-# Ensure pipx is installed
-if ! command -v pipx &>/dev/null; then
-    echo "Installing pipx..."
-    python3 -m pip install --user pipx
-    python3 -m pipx ensurepath
-fi
+# Upgrade pip
+sudo python3 -m pip install --upgrade pip
 
-# Add pipx binary path to PATH for this session
-export PATH="$PATH:/root/.local/bin"
+# Install certbot 2.0.0 globally
+sudo python3 -m pip install certbot==2.0.0
 
-# Install or upgrade Certbot via pipx
-pipx install --force certbot==2.0.0
-
-# Check if certbot is installed correctly
+# Confirm it's installed correctly
 if certbot --version 2>/dev/null | grep -q "2.0.0"; then
     echo ""
     echo "Certbot 2.0.0 installed successfully!"
