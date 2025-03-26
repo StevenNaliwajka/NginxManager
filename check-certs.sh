@@ -24,5 +24,5 @@ if echo "$RENEW_OUTPUT" | grep -q "Congratulations, all renewals succeeded"; the
     bash "$STOP_SCRIPT"
     bash "$START_SCRIPT"
 else
-    echo "No certs were renewed. Nginx will keep running."
+    echo "No certs were renewed. No action taken."
 fi
