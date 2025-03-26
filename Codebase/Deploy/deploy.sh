@@ -2,13 +2,6 @@
 
 set -e
 
-# Check if SSL checks should be bypassed
-FORCE_NON_SSL=false
-if [[ "$1" == "--force-non-ssl" ]]; then
-    FORCE_NON_SSL=true
-    shift
-fi
-
 # Read project root from path.txt
 PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
 if [ ! -f "$PATH_FILE" ]; then
@@ -16,7 +9,7 @@ if [ ! -f "$PATH_FILE" ]; then
     exit 1
 fi
 
-PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')  # Strip trailing slashes
+PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
 NGINX_BIN="$PROJECT_ROOT/nginx/sbin/nginx"
 NGINX_CONF="$PROJECT_ROOT/Codebase/Config/nginx.conf"
 SITES_AVAILABLE="$PROJECT_ROOT/Codebase/Sites/sites-available"
@@ -39,32 +32,44 @@ link_config() {
     local dst="$SITES_ENABLED/$domain"
     local cert_dir="$PROJECT_ROOT/certs/${domain}"
 
-    # Skip a known example config
+    # Skip example config
     if [[ "$domain" == "example.com" ]]; then
         echo "Skipping example config: $domain"
         return
     fi
 
+    # No config file found? Skip.
     if [ ! -f "$src" ]; then
         echo "Config not found: $src"
         return
     fi
 
-    # If the config contains SSL directives
+    # Does this config define an SSL server block (listen 443 ssl)?
     if grep -q "listen 443" "$src"; then
-        if [ "$FORCE_NON_SSL" = true ]; then
-            echo "Deploying temporary non-SSL config for $domain"
-            # Strip SSL directives from the config and deploy it
-            sed '/listen 443/d;/ssl_/d;/fullchain.pem/d;/privkey.pem/d' "$src" > "$dst"
+
+        # 1) Deploy the fallback HTTP block from the same file, if it exists
+        #    i.e., lines with `listen 80;` remain intact. So your site can at least run on port 80.
+        # 2) If we also have valid certs in cert_dir, then keep the 443 block too.
+        #    If certs are missing, we comment out or remove the 443 portion so it won't break Nginx.
+
+        # The simplest approach is:
+        #    * Always keep the entire file as-is (port 80 + port 443).
+        #    * If certs do not exist, comment out the SSL lines.
+        # That way, you get a working :80 server block AND the :443 block only if certs exist.
+
+        if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
+            # SSL certs exist => keep entire config
+            ln -sf "$src" "$dst"
+            echo "Linked full SSL-enabled site: $domain"
         else
-            if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
-                ln -sf "$src" "$dst"
-                echo "Linked SSL-enabled site: $domain"
-            else
-                echo "Skipping $domain — SSL certs not found at $cert_dir"
-            fi
+            echo "No SSL certs for $domain => stripping SSL lines, but leaving port 80"
+
+            # create a version of the config that has 443 lines removed
+            sed '/listen 443/d;/ssl_/d;/fullchain.pem/d;/privkey.pem/d' "$src" > "$dst"
+            echo "Deployed partial HTTP config for $domain"
         fi
     else
+        # No mention of 443 => straightforward symlink
         ln -sf "$src" "$dst"
         echo "Linked: $domain"
     fi
@@ -95,7 +100,7 @@ fi
 # Test and reload Nginx
 echo ""
 echo "Testing Nginx configuration..."
-$NGINX_BIN -t -c "$NGINX_CONF"
+"$NGINX_BIN" -t -c "$NGINX_CONF"
 
 echo ""
 if [ -f "$PID_FILE" ] && ps -p "$(cat "$PID_FILE")" > /dev/null 2>&1; then
@@ -103,7 +108,7 @@ if [ -f "$PID_FILE" ] && ps -p "$(cat "$PID_FILE")" > /dev/null 2>&1; then
     echo "Reloading Nginx via PID: $PID"
     kill -HUP "$PID"
 else
-    echo "No running Nginx instance found to reload."
+    echo "No running Nginx instance found to reload (or no PID file)."
 fi
 
 echo ""
