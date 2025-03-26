@@ -1,7 +1,9 @@
 # HTTP: redirect to HTTPS (still fine)
 server {
     listen 80;
-    server_name example.com www.example.com;    ###UPDATE
+
+        ###UPDATE
+    server_name example.com www.example.com;
 
     location ~ ^/.well-known/acme-challenge/ {
         root /opt/frontend-gateway/Codebase/Website;
@@ -12,20 +14,26 @@ server {
         return 301 https://$host$request_uri;
     }
 
-    access_log /opt/frontend-gateway/logs/example_http_access.log;    ###UPDATE
-    error_log  /opt/frontend-gateway/logs/example_http_error.log;    ###UPDATE
+            ###UPDATE
+    access_log /opt/frontend-gateway/logs/example_http_access.log;
+            ###UPDATE
+    error_log  /opt/frontend-gateway/logs/example_http_error.log;
 }
 
 # HTTPS: Reverse Proxy + SSL
 server {
     listen 443 ssl;
-    server_name example.com www.example.com;    ###UPDATE
+            ###UPDATE
+    server_name example.com www.example.com;
 
-    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;    ###UPDATE
-    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;    ###UPDATE
+            ###UPDATE
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+            ###UPDATE
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
 
     location / {
-        proxy_pass http://192.168.xxx.xxx;    ###UPDATE
+                ###UPDATE
+        proxy_pass http://192.168.xxx.xxx;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -37,6 +45,8 @@ server {
         allow all;
     }
 
-    access_log /opt/frontend-gateway/logs/example_https_access.log;    ###UPDATE
-    error_log  /opt/frontend-gateway/logs/example_https_error.log;    ###UPDATE
+            ###UPDATE
+    access_log /opt/frontend-gateway/logs/example_https_access.log;
+            ###UPDATE
+    error_log  /opt/frontend-gateway/logs/example_https_error.log;
 }
