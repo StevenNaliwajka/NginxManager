@@ -72,3 +72,14 @@ echo ""
 echo "Setup complete!"
 echo "You can check certs at: /etc/letsencrypt/live/<your-domain>"
 echo ""
+
+# -----------------------------------------------
+# Call first-time-cert.sh after everything else
+# -----------------------------------------------
+echo "Running first-time certificate generation..."
+bash "$FIRST_TIME_CERT_SCRIPT"
+
+echo ""
+echo "All done. If certificates were successfully obtained, you can run:"
+echo "  bash start-nginx.sh"
+echo "to start your final Nginx configuration."
