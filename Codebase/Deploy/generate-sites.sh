@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -11,19 +10,26 @@ if [ ! -f "$PATH_FILE" ]; then
     exit 1
 fi
 
-# Clean and trim path
 PROJECT_PATH="$(sed 's:/*$::' < "$PATH_FILE" | tr -d '[:space:]')"
-
 echo "Using PROJECT_PATH: $PROJECT_PATH"
+echo "Cleaning existing rendered site configs..."
 
-# Optional cleanup of old rendered files
+# Remove all rendered (non-template) site configs
 find "$TEMPLATE_DIR" -maxdepth 1 -type f ! -name '*.template' -exec rm -f {} +
 
 shopt -s nullglob
-for template in "$TEMPLATE_DIR"/*.template; do
+TEMPLATES=("$TEMPLATE_DIR"/*.template)
+
+if [ ${#TEMPLATES[@]} -eq 0 ]; then
+    echo "No templates found in $TEMPLATE_DIR"
+    exit 1
+fi
+
+echo "Rendering site configs from templates..."
+for template in "${TEMPLATES[@]}"; do
     base="$(basename "$template" .template)"
     output="$TEMPLATE_DIR/$base"
-    echo "Generating: $output"
+    echo " → $output"
     sed "s|{{PROJECT_PATH}}|$PROJECT_PATH|g" "$template" > "$output"
 done
 
