@@ -82,7 +82,7 @@ rm -f "$SITES_ENABLED"/*
 # Redeploy proper configs (with SSL)
 echo ""
 echo "Redeploying full site configs with SSL..."
-bash "$DEPLOY_SCRIPT"
+bash "$DEPLOY_SCRIPT" --force-non-ssl
 
 # Start final Nginx
 echo ""

@@ -2,6 +2,13 @@
 
 set -e
 
+# Check if SSL checks should be bypassed
+FORCE_NON_SSL=false
+if [[ "$1" == "--force-non-ssl" ]]; then
+    FORCE_NON_SSL=true
+    shift
+fi
+
 # Read project root from path.txt
 PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
 if [ ! -f "$PATH_FILE" ]; then
@@ -28,32 +35,34 @@ echo "Deploying Nginx site configs..."
 
 link_config() {
     local domain="$1"
+    local src="$SITES_AVAILABLE/$domain"
+    local dst="$SITES_ENABLED/$domain"
+    local cert_dir="$PROJECT_ROOT/certs/${domain}"
 
     if [[ "$domain" == "example.com" ]]; then
         echo "Skipping example config: $domain"
         return
     fi
 
-    local src="$SITES_AVAILABLE/$domain"
-    local dst="$SITES_ENABLED/$domain"
-    local cert_dir="$PROJECT_ROOT/certs/${domain}"
-
     if [ ! -f "$src" ]; then
         echo "Config not found: $src"
         return
     fi
 
-    # Check if the config requires SSL (port 443)
-    if grep -q "listen 443 ssl" "$src"; then
-        if [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
+    # Check if the config contains SSL directives
+    if grep -q "listen 443" "$src"; then
+        if [ "$FORCE_NON_SSL" = true ]; then
+            echo "Linking $domain (SSL check bypassed)"
             ln -sf "$src" "$dst"
+        elif [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
             echo "Linked SSL-enabled site: $domain"
+            ln -sf "$src" "$dst"
         else
             echo "Skipping $domain — SSL certs not found at $cert_dir"
         fi
     else
-        ln -sf "$src" "$dst"
         echo "Linked: $domain"
+        ln -sf "$src" "$dst"
     fi
 }
 
