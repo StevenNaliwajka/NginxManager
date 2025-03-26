@@ -56,16 +56,6 @@ echo ""
 echo "Installing Certbot..."
 bash "$CERTBOT_SCRIPT"
 
-# Start Nginx to respond to challenges
-echo ""
-echo "Starting Nginx temporarily to allow cert issuance..."
-sudo bash "$START_SCRIPT"
-
-# Generate initial certs (will only succeed if sites respond)
-echo ""
-echo "Attempting first-time certificate generation..."
-bash "$FIRST_TIME_CERT_SCRIPT"
-
 # Add cronjob if not already present
 echo ""
 echo "Ensuring daily Certbot renewal cronjob exists..."
