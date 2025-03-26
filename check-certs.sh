@@ -15,9 +15,11 @@ STOP_SCRIPT="$PROJECT_ROOT/stop-nginx.sh"
 START_SCRIPT="$PROJECT_ROOT/start-nginx.sh"
 
 echo "Attempting certbot renewal..."
-sudo certbot renew
+RENEW_OUTPUT=$(sudo certbot renew)
 
-if [ $? -eq 0 ]; then
+echo "$RENEW_OUTPUT"
+
+if echo "$RENEW_OUTPUT" | grep -q "Congratulations, all renewals succeeded"; then
     echo "Certs renewed. Restarting Nginx..."
     bash "$STOP_SCRIPT"
     bash "$START_SCRIPT"

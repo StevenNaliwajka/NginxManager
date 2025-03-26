@@ -16,7 +16,7 @@ LOG_DIR="$PROJECT_ROOT/logs"
 GEN_NGINX="$PROJECT_ROOT/Codebase/Deploy/generate-nginx-conf.sh"
 GEN_SITES="$PROJECT_ROOT/Codebase/Deploy/generate-sites.sh"
 CERTBOT_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/install-certbot.sh"
-
+CHECK_CERTS_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/check-certs.sh"
 
 echo ""
 echo "Starting full setup from: $PROJECT_ROOT"
@@ -52,15 +52,12 @@ echo ""
 echo "Installing Certbot..."
 bash "$CERTBOT_SCRIPT"
 
-# Add check-certs cronjob if not already present
-CRON_JOB="0 1 * * * bash $PROJECT_ROOT/Codebase/Deploy/check-certs.sh >> $PROJECT_ROOT/logs/certbot.log 2>&1"
 
 echo ""
 echo "Ensuring daily Certbot renewal cronjob exists..."
 
 # Check if job exists already
 ( crontab -l 2>/dev/null | grep -F "$CRON_JOB" ) >/dev/null
-
 if [ $? -ne 0 ]; then
     echo "Adding daily cert renewal job to crontab..."
     (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
@@ -68,13 +65,7 @@ else
     echo "Cronjob for cert renewal already exists."
 fi
 
-
+# Run cert check immediately after setup
 echo ""
-echo "Setup complete!"
-echo ""
-echo "Verify your site config at:"
-echo "   $PROJECT_ROOT/Codebase/Sites/sites-available/naliwajka.com"
-echo ""
-echo "Then start Nginx using:"
-echo "   bash start-nginx.sh"
-echo ""
+echo "Running initial certificate check/renewal..."
+bash "$CHECK_CERTS_SCRIPT"
