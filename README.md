@@ -1,6 +1,10 @@
 # frontend-gateway
 Reverse Proxy + HTTPS cert provider
 
+
+config done before setup.. conjob to run @ 1am to check certs
+
+
 ### Install:
 1) Cannot be installed directly onto root (~). Nginx Dies if so...   
 '/opt/frontend-gateway' is default.  
