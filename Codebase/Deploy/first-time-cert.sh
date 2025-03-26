@@ -3,7 +3,7 @@
 set -e
 
 # Load project root from path.txt
-PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
+PATH_FILE="$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)/../Config/path.txt"
 if [ ! -f "$PATH_FILE" ]; then
     echo "path.txt not found at $PATH_FILE"
     exit 1
@@ -21,6 +21,9 @@ START_SCRIPT="$PROJECT_ROOT/start-nginx.sh"
 
 mkdir -p "$SITES_ENABLED"
 mkdir -p "$TEMP_NON_SSL_DIR"
+
+# Backup existing configs
+cp -f "$SITES_ENABLED"/* "$TEMP_NON_SSL_DIR" 2>/dev/null || true
 
 echo ""
 echo "Creating temporary non-SSL site configs for Certbot..."
@@ -82,6 +85,8 @@ echo "Redeploying full site configs with SSL..."
 bash "$DEPLOY_SCRIPT"
 
 # Start final Nginx
+echo ""
+echo "Starting Nginx with full SSL setup..."
 bash "$START_SCRIPT"
 
 echo ""
