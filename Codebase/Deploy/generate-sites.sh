@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Construct absolute paths for the template directory and path.txt
 TEMPLATE_DIR="$SCRIPT_DIR/../Codebase/Sites/sites-available"
+echo "path is currently $SCRIPT_DIR"
 PATH_FILE="$SCRIPT_DIR/../Codebase/Config/path.txt"
 
 # Check for path.txt
