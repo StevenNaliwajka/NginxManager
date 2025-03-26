@@ -174,7 +174,7 @@ cython_debug/
 .pypirc
 .idea
 
-Config/sites-available/*
-!Config/sites-available/example.com
+Codebase/Sites/sites-available
+!Codebase/Sites/sites-available/example.com
 nginx
 mime.types
