@@ -25,7 +25,6 @@ mkdir -p "$TEMP_NON_SSL_DIR"
 echo "Stopping any existing Nginx on port 80 (if running)..."
 sudo fuser -k 80/tcp || true
 
-
 # Start temporary Nginx (with non-SSL configs) for Certbot's HTTP challenge
 echo ""
 echo "Starting Nginx temporarily to allow cert issuance..."
@@ -59,13 +58,27 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
     fi
 
     IFS=' ' read -r -a DOMAINS <<< "$DOMAIN_LINE"
-    echo -e "\n → Requesting cert for: ${DOMAINS[*]}"
-    echo "   Using webroot: $ROOT_DIR"
 
-    sudo certbot certonly --webroot -w "$ROOT_DIR" $(printf -- '-d %s ' "${DOMAINS[@]}") || {
-        echo "Certbot failed for: ${DOMAINS[*]}"
-        continue
-    }
+    # Workaround for certbot bug: handle domains individually if multiple
+    if [ "${#DOMAINS[@]}" -gt 1 ]; then
+        echo -e "\n → Multiple domains detected for $domain_name. Requesting certs one-by-one to avoid Certbot bug..."
+        for DOMAIN in "${DOMAINS[@]}"; do
+            echo "   → Requesting cert for: $DOMAIN"
+            sudo certbot certonly --webroot -w "$ROOT_DIR" -d "$DOMAIN" || {
+                echo "Certbot failed for: $DOMAIN"
+                continue
+            }
+        done
+    else
+        DOMAIN="${DOMAINS[0]}"
+        echo -e "\n → Requesting cert for: $DOMAIN"
+        echo "   Using webroot: $ROOT_DIR"
+
+        sudo certbot certonly --webroot -w "$ROOT_DIR" -d "$DOMAIN" || {
+            echo "Certbot failed for: $DOMAIN"
+            continue
+        }
+    fi
 done
 
 # Stop temporary Nginx
@@ -86,10 +99,10 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
         continue
     fi
 
-    cert_dir="$PROJECT_ROOT/certs/$domain_name"
+    cert_path="/etc/letsencrypt/live/$domain_name"
     dest_conf="$SITES_ENABLED/$domain_name"
 
-    if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
+    if [ -d "$cert_path" ] && [ -f "$cert_path/fullchain.pem" ] && [ -f "$cert_path/privkey.pem" ]; then
         echo "Deploying SSL-enabled config for $domain_name"
         bash "$DEPLOY_SCRIPT" "$domain_name"
     else
