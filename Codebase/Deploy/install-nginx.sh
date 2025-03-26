@@ -56,7 +56,7 @@ cd "nginx-$NGINX_VERSION"
 
 # Build and install locally
 echo "Building Nginx..."
-./configure --prefix="$INSTALL_DIR"
+./configure --prefix="$INSTALL_DIR" --with-http_ssl_module
 make
 make install
 
