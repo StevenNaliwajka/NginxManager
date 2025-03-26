@@ -22,29 +22,6 @@ START_SCRIPT="$PROJECT_ROOT/start-nginx.sh"
 mkdir -p "$SITES_ENABLED"
 mkdir -p "$TEMP_NON_SSL_DIR"
 
-echo ""
-echo "Creating temporary non-SSL site configs for Certbot..."
-
-# 1) Generate a temporary non-SSL config for each *.template (except example.com.template)
-for tmpl in "$TEMPLATE_DIR"/*.template; do
-    domain_name=$(basename "$tmpl" .template)
-
-    # Skip example.com
-    if [[ "$domain_name" == "example.com" ]]; then
-        echo "Skipping config/certbot steps for $domain_name."
-        continue
-    fi
-
-    temp_config="$SITES_ENABLED/$domain_name"
-
-    # Remove lines with 'listen 443', 'ssl_', and cert paths
-    sed '/listen 443/d;/ssl_/d;/fullchain.pem/d;/privkey.pem/d' "$tmpl" > "$temp_config"
-    echo "Generated temporary non-SSL config: $temp_config"
-
-    # Save a backup copy in the temporary backup directory
-    cp "$temp_config" "$TEMP_NON_SSL_DIR/"
-done
-
 # Start temporary Nginx (with non-SSL configs) for Certbot's HTTP challenge
 echo ""
 echo "Starting Nginx temporarily to allow cert issuance..."
