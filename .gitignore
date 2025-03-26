@@ -173,3 +173,6 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 .idea
+
+Config/sites-available/*
+!Config/sites-available/example.com
