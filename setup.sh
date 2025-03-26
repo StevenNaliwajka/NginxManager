@@ -73,7 +73,6 @@ echo "Setup complete!"
 echo "You can check certs at: /etc/letsencrypt/live/<your-domain>"
 echo ""
 
-
 # Ensure webroot for Certbot exists
 WEBROOT_DIR="$PROJECT_ROOT/Codebase/Website/.well-known/acme-challenge"
 echo ""
