@@ -22,6 +22,10 @@ START_SCRIPT="$PROJECT_ROOT/start-nginx.sh"
 mkdir -p "$SITES_ENABLED"
 mkdir -p "$TEMP_NON_SSL_DIR"
 
+echo "Stopping any existing Nginx on port 80 (if running)..."
+sudo fuser -k 80/tcp || true
+
+
 # Start temporary Nginx (with non-SSL configs) for Certbot's HTTP challenge
 echo ""
 echo "Starting Nginx temporarily to allow cert issuance..."
