@@ -1,33 +1,38 @@
 #!/bin/bash
 
-# Exit on any error
+#exit on error
 set -e
 
-SITES_AVAILABLE="./sites-available"
-SITES_ENABLED="./sites-enabled"
-# Path to NGINX binary
-NGINX_BIN="/usr/sbin/nginx"
+SITES_AVAILABLE="./Config/sites-available"
+SITES_ENABLED="./Codebase/sites-enabled"
+# local nginx binary
+NGINX_BIN="./nginx/sbin/nginx"
+NGINX_CONF="./Config/nginx.conf"
+
+echo "Ensuring $SITES_ENABLED exists..."
+mkdir -p "$SITES_ENABLED"
 
 echo "Deploying Nginx configs..."
 
 link_config() {
     local domain="$1"
 
-    # Skip example.com
+    # Skip template example
     if [ "$domain" == "example.com" ]; then
-        echo "Skipping: $domain (example config)"
+        echo "Skipping template: $domain"
         return
     fi
 
     local src="$SITES_AVAILABLE/$domain"
     local dst="$SITES_ENABLED/$domain"
 
-    if [ -f "$src" ]; then
-        ln -sf "$src" "$dst"
-        echo "Linked: $domain"
-    else
-        echo "Config not found: $domain"
+    if [ ! -f "$src" ]; then
+        echo "Config not found: $src"
+        return
     fi
+
+    ln -sf "$src" "$dst"
+    echo "Linked: $domain"
 }
 
 # Deploy all or selected
@@ -44,10 +49,12 @@ else
 fi
 
 # Test and reload nginx
+echo ""
 echo "Testing Nginx config..."
-$NGINX_BIN -t
+$NGINX_BIN -t -c "$NGINX_CONF"
 
 echo "Reloading Nginx..."
-sudo systemctl reload nginx
+$NGINX_BIN -s reload || true
 
-echo "Nginx reloaded successfully."
+echo ""
+echo "Nginx deployed and reloaded successfully."
