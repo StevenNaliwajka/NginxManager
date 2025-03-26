@@ -23,12 +23,21 @@ GEN_SITES_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/generate-sites.sh"
 mkdir -p "$SITES_ENABLED"
 mkdir -p "$TEMP_NON_SSL_DIR"
 
-echo "Stopping any existing Nginx on port 80 (if running)..."
-sudo fuser -k 80/tcp || true
+# Strip SSL blocks and prepare temporary HTTP-only configs
+for tmpl in "$TEMPLATE_DIR"/*.template; do
+    domain_name=$(basename "$tmpl" .template)
+
+    if [[ "$domain_name" == "example.com" ]]; then
+        continue
+    fi
+
+    non_ssl_path="$TEMP_NON_SSL_DIR/$domain_name"
+    sed '/listen 443/,/}/d' "$TEMPLATE_DIR/$domain_name" > "$non_ssl_path"
+    cp "$non_ssl_path" "$SITES_ENABLED/$domain_name"
+done
 
 # Start temporary Nginx (with non-SSL configs) for Certbot's HTTP challenge
-echo ""
-echo "Starting Nginx temporarily to allow cert issuance..."
+echo "\nStarting Nginx temporarily to allow cert issuance..."
 "$NGINX_BIN" -c "$NGINX_CONF"
 sleep 2
 
@@ -36,9 +45,7 @@ sleep 2
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     domain_name=$(basename "$tmpl" .template)
 
-    # Skip example.com
     if [[ "$domain_name" == "example.com" ]]; then
-        echo "Skipping config/certbot steps for $domain_name."
         continue
     fi
 
@@ -46,70 +53,47 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
     ROOT_LINE=$(grep -E "^\s*root\s" "$tmpl" | head -n1 | sed -E 's/^\s*root\s+//;s/;$//')
 
     if [ -z "$DOMAIN_LINE" ] || [ -z "$ROOT_LINE" ]; then
-        echo "Skipping $(basename "$tmpl") due to missing domain or root."
         continue
     fi
 
-    # Replace the placeholder with the actual project root
     ROOT_DIR="${ROOT_LINE//\{\{PROJECT_PATH\}\}/$PROJECT_ROOT}"
 
     if [ ! -d "$ROOT_DIR" ]; then
-        echo "Webroot not found: $ROOT_DIR — skipping $(basename "$tmpl")"
+        echo "Webroot not found: $ROOT_DIR — skipping $domain_name"
         continue
     fi
 
     IFS=' ' read -r -a DOMAINS <<< "$DOMAIN_LINE"
 
-    # Workaround for certbot bug: handle domains individually if multiple
-    if [ "${#DOMAINS[@]}" -gt 1 ]; then
-        echo -e "\n → Multiple domains detected for $domain_name. Requesting certs one-by-one to avoid Certbot bug..."
-        for DOMAIN in "${DOMAINS[@]}"; do
-            echo "   → Requesting cert for: $DOMAIN"
-            sudo certbot certonly --webroot \
-  --config-dir /etc/letsencrypt \
-  --work-dir /var/lib/letsencrypt \
-  --logs-dir /var/log/letsencrypt \
-  -w "$ROOT_DIR" -d "$DOMAIN" || {
-                echo "Certbot failed for: $DOMAIN"
-                continue
-            }
-        done
-    else
-        DOMAIN="${DOMAINS[0]}"
+    for DOMAIN in "${DOMAINS[@]}"; do
         echo -e "\n → Requesting cert for: $DOMAIN"
-        echo "   Using webroot: $ROOT_DIR"
-
         sudo certbot certonly --webroot \
-  --config-dir /etc/letsencrypt \
-  --work-dir /var/lib/letsencrypt \
-  --logs-dir /var/log/letsencrypt \
-  -w "$ROOT_DIR" -d "$DOMAIN" || {
+            --config-dir /etc/letsencrypt \
+            --work-dir /var/lib/letsencrypt \
+            --logs-dir /var/log/letsencrypt \
+            -w "$ROOT_DIR" -d "$DOMAIN" || {
             echo "Certbot failed for: $DOMAIN"
             continue
         }
-    fi
+    done
+
 done
 
 # Stop temporary Nginx
-echo ""
-echo "Stopping temporary Nginx..."
+echo "\nStopping temporary Nginx..."
 bash "$STOP_SCRIPT"
 sleep 2
 
 # Regenerate site configs now that certs may exist
-echo ""
-echo "Regenerating site configs with SSL (if certs exist)..."
+echo "\nRegenerating site configs with SSL (if certs exist)..."
 bash "$GEN_SITES_SCRIPT"
 
 # Redeploy proper SSL configs if certs exist; else restore non-SSL
-echo ""
-echo "Redeploying site configs..."
+echo "\nRedeploying site configs..."
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     domain_name=$(basename "$tmpl" .template)
 
-    # Skip example.com
     if [[ "$domain_name" == "example.com" ]]; then
-        echo "Skipping config/certbot steps for $domain_name."
         continue
     fi
 
@@ -126,9 +110,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
 done
 
 # Start final Nginx with SSL configs (if certs were issued)
-echo ""
-echo "Starting Nginx with final configuration..."
+echo "\nStarting Nginx with final configuration..."
 bash "$START_SCRIPT"
 
-echo ""
-echo "First-time cert request complete and live with SSL (if certs were issued)."
+echo "\nFirst-time cert request complete and live with SSL (if certs were issued)."

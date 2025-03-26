@@ -55,7 +55,7 @@ link_config() {
         else
             echo "No SSL certs for $domain — stripping SSL lines, keeping port 80 only"
             sed '/listen 443/d;/ssl_/d;/fullchain.pem/d;/privkey.pem/d' "$src" > "$dst"
-            echo "🪛 Deployed partial HTTP config for $domain"
+            echo "Deployed partial HTTP config for $domain"
         fi
     else
         # No SSL defined in config — just link it
