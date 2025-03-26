@@ -1,8 +1,8 @@
 # Personal Nginx setup + config quickstart
 
-1) Install nginx
+1) Install nginx + certbot
 ```bash
-bash install-nginx.sh
+bash setup.sh
 ```
 2) Update your websites with /Config/sites-available
 - Use example.com as a basis from where to start

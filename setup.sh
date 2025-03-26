@@ -16,4 +16,8 @@ bash ./Codebase/Install/install-certbot.sh
 
 echo ""
 echo "Setup complete!"
-echo "Now you can run: bash start-nginx.sh"
+echo ""
+echo "Add your websites to ./Config/sites-available/~"
+echo "Duplicate 'example.com', rename and configure as needed!"
+echo ""
+echo "Once configured, get certificates: bash check-certs.sh"
