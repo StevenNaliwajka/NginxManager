@@ -46,18 +46,8 @@ link_config() {
         return
     fi
 
-    if grep -q "listen 443" "$src"; then
-        if [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
-            echo "SSL certs exist for $domain — linking full config"
-            ln -sf "$src" "$dst"
-        else
-            echo "No certs found for $domain — stripping SSL blocks"
-            sed '/listen 443/,/}/d;/ssl_/d' "$src" > "$dst"
-        fi
-    else
-        echo "No HTTPS block in $domain config — linking as-is"
-        ln -sf "$src" "$dst"
-    fi
+    echo "Linking full config for $domain (no SSL checks)"
+    ln -sf "$src" "$dst"
 
     echo "Done: $domain → $(realpath "$dst")"
 }
