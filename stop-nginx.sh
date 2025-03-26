@@ -1,26 +1,25 @@
 #!/bin/bash
 
+PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 PID_FILE="/tmp/nginx-local.pid"
 
+echo "Stopping Nginx..."
+
 if [ ! -f "$PID_FILE" ]; then
-    echo "No running Nginx instance found (PID file not present)."
+    echo "No PID file found — Nginx may not be running."
     exit 0
 fi
 
 PID=$(cat "$PID_FILE")
 
-if ps -p "$PID" > /dev/null; then
+if ps -p "$PID" > /dev/null 2>&1; then
     echo "Stopping Nginx (PID: $PID)..."
-    kill "$PID"
+    kill -QUIT "$PID"
     sleep 1
 else
-    echo "PID $PID is not running, but PID file exists."
+    echo "PID $PID not running — removing stale PID file..."
 fi
 
-# Check if PID file still exists and remove it
-if [ -f "$PID_FILE" ]; then
-    rm "$PID_FILE"
-    echo "PID file cleaned up."
-fi
-
+rm -f "$PID_FILE"
+echo "PID file cleaned up."
 echo "Nginx stopped successfully."

@@ -2,22 +2,38 @@
 
 set -e
 
-echo "Starting full setup..."
+PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+INSTALL_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/install-nginx.sh"
+NGINX_BIN="$PROJECT_ROOT/nginx/sbin/nginx"
+LOG_DIR="$PROJECT_ROOT/logs"
 
-# Step 1: Install Nginx
 echo ""
-echo "Installing local Nginx..."
-bash ./Codebase/Install/install-nginx.sh
+echo "Starting full setup from: $PROJECT_ROOT"
 
-# Step 2: Install Certbot
-echo ""
-echo "Installing Certbot (system-wide)..."
-bash ./Codebase/Install/install-certbot.sh
+# Ensure logs directory exists
+echo "Ensuring log directory exists at: $LOG_DIR"
+mkdir -p "$LOG_DIR"
+
+# Install Nginx if missing
+if [ ! -f "$NGINX_BIN" ]; then
+    echo ""
+    echo "Nginx binary not found — running installer..."
+    bash "$INSTALL_SCRIPT"
+else
+    echo ""
+    echo "Nginx already installed at: $NGINX_BIN"
+fi
+
+# Confirm binary was installed
+if [ ! -x "$NGINX_BIN" ]; then
+    echo "Nginx installation failed or binary not found."
+    exit 1
+fi
 
 echo ""
 echo "Setup complete!"
 echo ""
-echo "Add your websites to ./Config/sites-available/~"
-echo "Duplicate 'example.com', rename and configure as needed!"
+echo "Verify your config at: $PROJECT_ROOT/Codebase/Sites/sites-available/naliwajka.com"
+echo "Then start Nginx using:"
+echo "    bash start-nginx.sh"
 echo ""
-echo "Once configured, get certificates: bash check-certs.sh"
