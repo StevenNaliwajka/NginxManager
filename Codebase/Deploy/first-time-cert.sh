@@ -36,6 +36,10 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
     cp "$non_ssl_path" "$SITES_ENABLED/$domain_name"
 done
 
+echo ""
+echo "Ensuring port 80 is free..."
+sudo fuser -k 80/tcp || true
+
 # Start temporary Nginx (with non-SSL configs) for Certbot's HTTP challenge
 echo "\nStarting Nginx temporarily to allow cert issuance..."
 "$NGINX_BIN" -c "$NGINX_CONF"
