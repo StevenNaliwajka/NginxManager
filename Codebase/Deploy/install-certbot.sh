@@ -11,16 +11,30 @@ fi
 
 PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
 
-echo "Installing Certbot system-wide..."
+echo "Installing Certbot v2.0.0 system-wide using pipx..."
 
-# Update and install
-sudo apt update
-sudo apt install -y certbot
+# Remove existing Certbot installed via apt (if any)
+if dpkg -l | grep -q certbot; then
+    echo "Removing existing Certbot installed via apt..."
+    sudo apt remove --purge -y certbot
+fi
+
+# Ensure pipx is installed
+if ! command -v pipx >/dev/null 2>&1; then
+    echo "Installing pipx..."
+    sudo apt install -y pipx
+    pipx ensurepath
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# Install Certbot v2.0.0
+pipx install certbot==2.0.0 --force
 
 # Confirm install
 if command -v certbot >/dev/null 2>&1; then
     echo ""
-    echo "Certbot installed successfully!"
+    echo "Certbot 2.0.0 installed successfully!"
+    echo "   Version: $(certbot --version)"
     echo "   Location: $(which certbot)"
     echo "   Project path: $PROJECT_ROOT"
 else
