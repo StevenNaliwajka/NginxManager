@@ -16,7 +16,7 @@ LOG_DIR="$PROJECT_ROOT/logs"
 GEN_NGINX="$PROJECT_ROOT/Codebase/Deploy/generate-nginx-conf.sh"
 GEN_SITES="$PROJECT_ROOT/Codebase/Deploy/generate-sites.sh"
 CERTBOT_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/install-certbot.sh"
-CHECK_CERTS_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/check-certs.sh"
+CHECK_CERTS_SCRIPT="$PROJECT_ROOT/check-certs.sh"
 
 echo ""
 echo "Starting full setup from: $PROJECT_ROOT"
