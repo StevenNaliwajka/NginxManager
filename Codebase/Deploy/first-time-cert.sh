@@ -25,12 +25,19 @@ mkdir -p "$TEMP_NON_SSL_DIR"
 echo ""
 echo "Creating temporary non-SSL site configs for Certbot..."
 
-# For each template file, generate a temporary non-SSL config and back it up.
+# 1) Generate a temporary non-SSL config for each *.template (except example.com.template)
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     domain_name=$(basename "$tmpl" .template)
+
+    # Skip example.com.template
+    if [ "$domain_name" = "example.com" ]; then
+        echo "Skipping $tmpl because it's the example domain."
+        continue
+    fi
+
     temp_config="$SITES_ENABLED/$domain_name"
 
-    # Generate temporary non-SSL config by stripping out SSL directives
+    # Remove lines with 'listen 443', 'ssl_', and cert paths
     sed '/listen 443/d;/ssl_/d;/fullchain.pem/d;/privkey.pem/d' "$tmpl" > "$temp_config"
     echo "Generated temporary non-SSL config: $temp_config"
 
@@ -38,14 +45,22 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
     cp "$temp_config" "$TEMP_NON_SSL_DIR/"
 done
 
-# Start temporary Nginx (with non-SSL configs) so Certbot can complete the HTTP challenge
+# Start temporary Nginx (with non-SSL configs) for Certbot's HTTP challenge
 echo ""
 echo "Starting Nginx temporarily to allow cert issuance..."
-$NGINX_BIN -c "$NGINX_CONF"
+"$NGINX_BIN" -c "$NGINX_CONF"
 sleep 2
 
-# Run Certbot for each domain based on template
+# 2) Run Certbot for each valid template except example.com.template
 for tmpl in "$TEMPLATE_DIR"/*.template; do
+    domain_name=$(basename "$tmpl" .template)
+
+    # Skip example.com.template
+    if [ "$domain_name" = "example.com" ]; then
+        echo "Skipping certbot for $tmpl (example domain)."
+        continue
+    fi
+
     DOMAIN_LINE=$(grep -E "^\s*server_name\s" "$tmpl" | sed -E 's/^\s*server_name\s+//;s/;$//')
     ROOT_LINE=$(grep -E "^\s*root\s" "$tmpl" | head -n1 | sed -E 's/^\s*root\s+//;s/;$//')
 
@@ -78,25 +93,31 @@ echo "Stopping temporary Nginx..."
 bash "$STOP_SCRIPT"
 sleep 2
 
-# Redeploy proper site configs:
-# For each template, if certs exist, deploy the SSL-enabled config; otherwise, restore the temporary non-SSL config.
+# 3) Redeploy proper SSL configs if certs exist; else restore non-SSL
 echo ""
 echo "Redeploying site configs..."
 for tmpl in "$TEMPLATE_DIR"/*.template; do
-    domain=$(basename "$tmpl" .template)
-    cert_dir="$PROJECT_ROOT/certs/$domain"
-    dest_conf="$SITES_ENABLED/$domain"
+    domain_name=$(basename "$tmpl" .template)
+
+    # Skip example.com.template
+    if [ "$domain_name" = "example.com" ]; then
+        echo "Skipping final deploy for example.com."
+        continue
+    fi
+
+    cert_dir="$PROJECT_ROOT/certs/$domain_name"
+    dest_conf="$SITES_ENABLED/$domain_name"
 
     if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
-        echo "Deploying SSL-enabled config for $domain"
-        bash "$DEPLOY_SCRIPT" "$domain"
+        echo "Deploying SSL-enabled config for $domain_name"
+        bash "$DEPLOY_SCRIPT" "$domain_name"
     else
-        echo "No certs found for $domain; restoring temporary non-SSL config..."
-        cp "$TEMP_NON_SSL_DIR/$domain" "$dest_conf"
+        echo "No certs found for $domain_name; restoring temporary non-SSL config..."
+        cp "$TEMP_NON_SSL_DIR/$domain_name" "$dest_conf"
     fi
 done
 
-# Start final Nginx with proper SSL-enabled configs (if certs were issued)
+# 4) Start final Nginx with SSL configs (if certs were issued)
 echo ""
 echo "Starting Nginx with final configuration..."
 bash "$START_SCRIPT"
