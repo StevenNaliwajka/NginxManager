@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Load project root from path.txt (using unescaped quotes)
+# Load project root from path.txt
 PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
 if [ ! -f "$PATH_FILE" ]; then
     echo "path.txt not found at $PATH_FILE"
@@ -18,30 +18,33 @@ STOP_SCRIPT="$PROJECT_ROOT/stop-nginx.sh"
 DEPLOY_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/deploy.sh"
 START_SCRIPT="$PROJECT_ROOT/start-nginx.sh"
 
+# Ensure necessary directories exist
 mkdir -p "$SITES_ENABLED"
 mkdir -p "$TEMP_NON_SSL_DIR"
-
-# Backup existing configs from sites-enabled to temporary backup directory
-cp -f "$SITES_ENABLED"/* "$TEMP_NON_SSL_DIR" 2>/dev/null || true
 
 echo ""
 echo "Creating temporary non-SSL site configs for Certbot..."
 
+# For each template file, generate a temporary non-SSL config and back it up.
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     domain_name=$(basename "$tmpl" .template)
-    output_path="$SITES_ENABLED/$domain_name"
-    # Remove lines with 'listen 443', 'ssl_', and certificate paths
-    sed '/listen 443/d;/ssl_/d;/fullchain.pem/d;/privkey.pem/d' "$tmpl" > "$output_path"
-    echo "Generated temporary non-SSL config: $output_path"
+    temp_config="$SITES_ENABLED/$domain_name"
+
+    # Generate temporary non-SSL config by stripping out SSL directives
+    sed '/listen 443/d;/ssl_/d;/fullchain.pem/d;/privkey.pem/d' "$tmpl" > "$temp_config"
+    echo "Generated temporary non-SSL config: $temp_config"
+
+    # Save a backup copy in the temporary backup directory
+    cp "$temp_config" "$TEMP_NON_SSL_DIR/"
 done
 
-# Start temporary Nginx
+# Start temporary Nginx (with non-SSL configs) so Certbot can complete the HTTP challenge
 echo ""
 echo "Starting Nginx temporarily to allow cert issuance..."
 $NGINX_BIN -c "$NGINX_CONF"
 sleep 2
 
-# Run Certbot per domain from each template.
+# Run Certbot for each domain based on template
 for tmpl in "$TEMPLATE_DIR"/*.template; do
     DOMAIN_LINE=$(grep -E "^\s*server_name\s" "$tmpl" | sed -E 's/^\s*server_name\s+//;s/;$//')
     ROOT_LINE=$(grep -E "^\s*root\s" "$tmpl" | head -n1 | sed -E 's/^\s*root\s+//;s/;$//')
@@ -51,7 +54,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
         continue
     fi
 
-    # Replace placeholder with actual project path
+    # Replace the placeholder with the actual project root
     ROOT_DIR="${ROOT_LINE//\{\{PROJECT_PATH\}\}/$PROJECT_ROOT}"
 
     if [ ! -d "$ROOT_DIR" ]; then
@@ -75,12 +78,25 @@ echo "Stopping temporary Nginx..."
 bash "$STOP_SCRIPT"
 sleep 2
 
-# Redeploy proper configs (with SSL enabled) using temporary non-SSL override
+# Redeploy proper site configs:
+# For each template, if certs exist, deploy the SSL-enabled config; otherwise, restore the temporary non-SSL config.
 echo ""
-echo "Redeploying full site configs with SSL (forcing non-SSL temporary mode)..."
-bash "$DEPLOY_SCRIPT" --force-non-ssl
+echo "Redeploying site configs..."
+for tmpl in "$TEMPLATE_DIR"/*.template; do
+    domain=$(basename "$tmpl" .template)
+    cert_dir="$PROJECT_ROOT/certs/$domain"
+    dest_conf="$SITES_ENABLED/$domain"
 
-# Start final Nginx with proper SSL-enabled configs (certs should now be in place)
+    if [ -d "$cert_dir" ] && [ -f "$cert_dir/fullchain.pem" ] && [ -f "$cert_dir/privkey.pem" ]; then
+        echo "Deploying SSL-enabled config for $domain"
+        bash "$DEPLOY_SCRIPT" "$domain"
+    else
+        echo "No certs found for $domain; restoring temporary non-SSL config..."
+        cp "$TEMP_NON_SSL_DIR/$domain" "$dest_conf"
+    fi
+done
+
+# Start final Nginx with proper SSL-enabled configs (if certs were issued)
 echo ""
 echo "Starting Nginx with final configuration..."
 bash "$START_SCRIPT"
