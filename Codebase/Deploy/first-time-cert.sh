@@ -65,7 +65,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
         echo -e "\n → Multiple domains detected for $domain_name. Requesting certs one-by-one to avoid Certbot bug..."
         for DOMAIN in "${DOMAINS[@]}"; do
             echo "   → Requesting cert for: $DOMAIN"
-            sudo certbot certonly --webroot -w "$ROOT_DIR" -d "$DOMAIN" || {
+            sudo certbot certonly --webroot --force-renewal -w "$ROOT_DIR" -d "$DOMAIN" || {
                 echo "Certbot failed for: $DOMAIN"
                 continue
             }
@@ -75,7 +75,7 @@ for tmpl in "$TEMPLATE_DIR"/*.template; do
         echo -e "\n → Requesting cert for: $DOMAIN"
         echo "   Using webroot: $ROOT_DIR"
 
-        sudo certbot certonly --webroot -w "$ROOT_DIR" -d "$DOMAIN" || {
+        sudo certbot certonly --webroot --force-renewal -w "$ROOT_DIR" -d "$DOMAIN" || {
             echo "Certbot failed for: $DOMAIN"
             continue
         }
