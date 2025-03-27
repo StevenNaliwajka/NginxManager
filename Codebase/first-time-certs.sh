@@ -21,7 +21,7 @@ while IFS=, read -r domain ip; do
 
     echo "Processing $domain"
 
-    sudo certbot certonly --webroot \
+    certbot certonly --webroot \
       --webroot-path "$WEBROOT_PATH" \
       --agree-tos \
       --non-interactive \
