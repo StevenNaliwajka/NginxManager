@@ -46,11 +46,6 @@ if [ "$MISSING" = true ]; then
     exit 1
 fi
 
-# Build nginx Conf
-echo ""
-echo "Building Nginx Conf..."
-bash "$NGINX_CONF_SCRIPT"
-
 
 # Install Nginx if missing
 if [ ! -f "$NGINX_BIN" ]; then
@@ -67,6 +62,11 @@ if [ ! -x "$NGINX_BIN" ]; then
     echo "Nginx installation failed or binary not executable."
     exit 1
 fi
+
+# Build nginx Conf
+echo ""
+echo "Building Nginx Conf..."
+bash "$NGINX_CONF_SCRIPT"
 
 # Install Certbot
 echo ""
