@@ -103,12 +103,18 @@ done
 echo ""
 echo "Attempting to collect certifications..."
 bash "$FIRST_TIME_CERT"
+CERT_SUCCESS=$?
 
+if [ "$CERT_SUCCESS" -eq 0 ]; then
+    echo ""
+    echo "Certificates issued successfully. Switching to HTTPS configs..."
+    bash "$DEPLOY_SCRIPT" --phase full
+else
+    echo ""
+    echo "Certificate generation failed. Staying in HTTP-only mode."
+    echo "You can manually retry: bash Codebase/first-time-certs.sh"
+fi
 
-# Now Build pages /w FULL HTTPS
-echo ""
-echo "Building Reverse-Proxy Pages w/ HTTPS..."
-bash "$DEPLOY_SCRIPT" --phase full
 
 # Restart Nginx
 echo ""
