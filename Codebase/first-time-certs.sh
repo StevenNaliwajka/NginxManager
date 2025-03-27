@@ -71,6 +71,7 @@ while IFS=, read -r domain ip; do
 
     rm -f "$TOKEN_PATH"
 
+    #--staging \
     # Request certificate
     certbot certonly --webroot \
       --webroot-path "$WEBROOT_PATH" \
@@ -78,7 +79,6 @@ while IFS=, read -r domain ip; do
       --non-interactive \
       --no-eff-email \
       --email "$EMAIL" \
-      --staging \
       -d "$domain"
 
     if [ $? -eq 0 ]; then
