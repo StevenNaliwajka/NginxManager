@@ -1,11 +1,14 @@
 #!/bin/bash
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+set -e
 
-TEMPLATE_DIR="$PROJECT_ROOT/Codebase/Templates"
+# Set project-relative paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+TEMPLATE_DIR="$PROJECT_ROOT/Templates"
 DOMAINS_FILE="$PROJECT_ROOT/Config/domains.txt"
-OUTPUT_DIR="$PROJECT_ROOT/Codebase/sites-enabled"
+OUTPUT_DIR="$PROJECT_ROOT/sites-enabled"
 
 PHASE="$1"
 
