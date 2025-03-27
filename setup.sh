@@ -21,13 +21,31 @@ FIRST_TIME_CERT="$PROJECT_ROOT/Codebase/first-time-certs.sh"
 
 CRON_JOB="0 1 */2 * * bash $CHECK_CERTS_SCRIPT >> $PROJECT_ROOT/logs/certbot.log 2>&1"
 
+# Check for domains.txt or email.txt
+MISSING=false
 
+# Check for domains.txt
 if [ ! -f "./Config/domains.txt" ]; then
     echo "domain,ip" > ./Config/domains.txt
     echo "'Config/domains.txt' not found. A new one has been created."
-    echo "Go configure Config/domains.txt before continuing."
+    MISSING=true
+fi
+
+# Check for email.txt
+if [ ! -f "./Config/email.txt" ]; then
+    echo "you@example.com" > ./Config/email.txt
+    echo "'Config/email.txt' not found. A new one has been created."
+    MISSING=true
+fi
+
+# Exit if any were missing
+if [ "$MISSING" = true ]; then
+    echo ""
+    echo "Please configure the missing file(s) in Config/ before continuing."
     exit 1
 fi
+
+
 
 # Install Nginx if missing
 if [ ! -f "$NGINX_BIN" ]; then
