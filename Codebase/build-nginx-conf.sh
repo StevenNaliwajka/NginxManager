@@ -19,7 +19,7 @@ if [ ! -f "$TEMPLATE_PATH" ]; then
     exit 1
 fi
 
-# Build nginx.conf
-sed "s|PROJECT_PATH|$DEFAULT_PATH|g" "$TEMPLATE_PATH" > "$OUTPUT_PATH"
+# Replace placeholder and write output
+sed "s|{{PROJECT_PATH}}|$DEFAULT_PATH|g" "$TEMPLATE_PATH" > "$OUTPUT_PATH"
 
 echo "nginx.conf generated at: $OUTPUT_PATH"
