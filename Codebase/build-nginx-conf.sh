@@ -6,7 +6,6 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT_FILE="$SCRIPT_DIR/../Config/default_path.txt"
 TEMPLATE_PATH="$SCRIPT_DIR/Templates/nginx.conf.template"
-OUTPUT_PATH="$SCRIPT_DIR/nginx/conf/nginx.conf"
 
 # Confirm default_path.txt exists
 if [ ! -f "$PROJECT_ROOT_FILE" ]; then
@@ -16,10 +15,11 @@ fi
 
 # Read and clean path
 PROJECT_ROOT=$(cat "$PROJECT_ROOT_FILE" | xargs)
+FINAL_PATH="$PROJECT_ROOT/nginx/conf/nginx.conf"
 
 echo "Using PROJECT_ROOT: $PROJECT_ROOT"
 echo "Reading from template: $TEMPLATE_PATH"
-echo "Writing output to: $OUTPUT_PATH"
+echo "Writing output to: $FINAL_PATH"
 
 # Confirm template exists
 if [ ! -f "$TEMPLATE_PATH" ]; then
@@ -27,7 +27,10 @@ if [ ! -f "$TEMPLATE_PATH" ]; then
     exit 1
 fi
 
-# Perform the replacement
-sed "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" "$TEMPLATE_PATH" > "$OUTPUT_PATH"
+# Make sure output dir exists
+mkdir -p "$(dirname "$FINAL_PATH")"
 
-echo "nginx.conf successfully generated!"
+# Perform the replacement
+sed "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" "$TEMPLATE_PATH" > "$FINAL_PATH"
+
+echo "nginx.conf successfully generated at: $FINAL_PATH"
