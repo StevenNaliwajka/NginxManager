@@ -5,6 +5,16 @@ export PATH="$PATH:$HOME/.local/bin:/root/.local/bin"
 
 DOMAINS_FILE="./Config/domains.txt"
 WEBROOT_PATH="/opt/letsencrypt-challenges"
+EMAIL_FILE="./Config/email.txt"
+
+if [ ! -f "$EMAIL_FILE" ]; then
+    echo "Email file not found at $EMAIL_FILE"
+    echo "Please create it with your contact email."
+    exit 1
+fi
+
+EMAIL=$(cat "$EMAIL_FILE" | xargs)
+
 
 echo ""
 echo "Starting first-time SSL certificate generation for all domains..."
@@ -29,7 +39,7 @@ while IFS=, read -r domain ip; do
       --agree-tos \
       --non-interactive \
       --no-eff-email \
-      --email you@example.com \
+      --email "$EMAIL" \
       --staging \
       -d "$domain"
 
