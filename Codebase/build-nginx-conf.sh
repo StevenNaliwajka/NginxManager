@@ -5,8 +5,8 @@ set -e
 # Absolute paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT_FILE="$SCRIPT_DIR/../Config/default_path.txt"
-TEMPLATE_PATH="$SCRIPT_DIR/nginx.conf.template"
-OUTPUT_PATH="$SCRIPT_DIR/nginx.conf"
+TEMPLATE_PATH="$SCRIPT_DIR/Templates/nginx.conf.template"
+OUTPUT_PATH="$SCRIPT_DIR/nginx/conf/nginx.conf"
 
 # Confirm default_path.txt exists
 if [ ! -f "$PROJECT_ROOT_FILE" ]; then
