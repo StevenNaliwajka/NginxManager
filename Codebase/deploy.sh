@@ -67,6 +67,13 @@ while IFS=, read -r domain ip; do
     if [[ " ${SEEN[*]} " =~ " $domain " ]]; then
         continue
     fi
+
+    # In full mode, skip if SSL cert doesn't exist
+    if [[ "$MODE" == "full" && ! -f "/etc/letsencrypt/live/$domain/fullchain.pem" ]]; then
+        echo "Skipping $domain — no cert found"
+        continue
+    fi
+
     SEEN+=("$domain")
 
     # Build config for main domain
@@ -77,7 +84,13 @@ while IFS=, read -r domain ip; do
     # If domain does not start with www., add www variant too
     if [[ "$domain" != www.* ]]; then
         www_domain="www.$domain"
+
         if [[ ! " ${SEEN[*]} " =~ " $www_domain " ]]; then
+            if [[ "$MODE" == "full" && ! -f "/etc/letsencrypt/live/$www_domain/fullchain.pem" ]]; then
+                echo "Skipping $www_domain — no cert found"
+                continue
+            fi
+
             www_output_file="$OUTPUT_DIR/$www_domain"
             echo "→ $www_domain ($ip)"
             sed "s/{{DOMAIN}}/$www_domain/g; s/{{IP}}/$ip/g" "$TEMPLATE_PATH" > "$www_output_file"
