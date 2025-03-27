@@ -1,25 +1,33 @@
 #!/bin/bash
 
-# Paths
-TEMPLATE_PATH="./Codebase/Templates/nginx.conf.template"
-OUTPUT_PATH="./Codebase/Templates/nginx.conf"
-DEFAULT_PATH_FILE="./Config/default_path.txt"
+set -e
 
-# Read the default path from file
-if [ ! -f "$DEFAULT_PATH_FILE" ]; then
-    echo "Error: default_path.txt not found at $DEFAULT_PATH_FILE"
+# Absolute paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT_FILE="$SCRIPT_DIR/../Config/default_path.txt"
+TEMPLATE_PATH="$SCRIPT_DIR/nginx.conf.template"
+OUTPUT_PATH="$SCRIPT_DIR/nginx.conf"
+
+# Confirm default_path.txt exists
+if [ ! -f "$PROJECT_ROOT_FILE" ]; then
+    echo "Error: default_path.txt not found at $PROJECT_ROOT_FILE"
     exit 1
 fi
 
-DEFAULT_PATH=$(cat "$DEFAULT_PATH_FILE" | xargs)
+# Read and clean path
+PROJECT_ROOT=$(cat "$PROJECT_ROOT_FILE" | xargs)
 
-# Check the template exists
+echo "Using PROJECT_ROOT: $PROJECT_ROOT"
+echo "Reading from template: $TEMPLATE_PATH"
+echo "Writing output to: $OUTPUT_PATH"
+
+# Confirm template exists
 if [ ! -f "$TEMPLATE_PATH" ]; then
     echo "Error: nginx.conf.template not found at $TEMPLATE_PATH"
     exit 1
 fi
 
-# Replace placeholder and write output
-sed "s|{{PROJECT_PATH}}|$DEFAULT_PATH|g" "$TEMPLATE_PATH" > "$OUTPUT_PATH"
+# Perform the replacement
+sed "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" "$TEMPLATE_PATH" > "$OUTPUT_PATH"
 
-echo "nginx.conf generated at: $OUTPUT_PATH"
+echo "nginx.conf successfully generated!"
