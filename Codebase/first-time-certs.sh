@@ -1,11 +1,16 @@
 #!/bin/bash
 
+set -e
+
+# Always resolve paths relative to the script itself
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 export PATH="$PATH:$HOME/.local/bin:/root/.local/bin"
 
-
-DOMAINS_FILE="./Config/domains.txt"
+DOMAINS_FILE="$PROJECT_ROOT/Config/domains.txt"
+EMAIL_FILE="$PROJECT_ROOT/Config/email.txt"
 WEBROOT_PATH="/opt/letsencrypt-challenges"
-EMAIL_FILE="./Config/email.txt"
 
 if [ ! -f "$EMAIL_FILE" ]; then
     echo "Email file not found at $EMAIL_FILE"
