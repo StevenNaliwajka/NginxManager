@@ -1,8 +1,11 @@
 #!/bin/bash
 
-TEMPLATE_DIR="/Codebase/Templates"
-DOMAINS_FILE="/Config/domains.txt"
-OUTPUT_DIR="/Codebase/sites-enabled"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+
+TEMPLATE_DIR="$PROJECT_ROOT/Codebase/Templates"
+DOMAINS_FILE="$PROJECT_ROOT/Config/domains.txt"
+OUTPUT_DIR="$PROJECT_ROOT/Codebase/sites-enabled"
 
 PHASE="$1"
 
