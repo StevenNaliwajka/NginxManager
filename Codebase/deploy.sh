@@ -30,7 +30,7 @@ mkdir -p "$OUTPUT_DIR"
 if [[ "$MODE" == "init" ]]; then
     TEMPLATE_PATH="$TEMPLATE_DIR/example.com.http.template"
 else
-    TEMPLATE_PATH="$TEMPLATE_DIR/example.com.full.template"
+    TEMPLATE_PATH="$TEMPLATE_DIR/example.com.template"
 fi
 
 echo ""
