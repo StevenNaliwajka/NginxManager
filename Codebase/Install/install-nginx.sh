@@ -4,14 +4,14 @@ set -e
 
 # Dynamically determine project path
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PATH_FILE="$SCRIPT_DIR/../Config/path.txt"
+PATH_FILE="$SCRIPT_DIR/../../Config/default_path.txt"
 
 if [ ! -f "$PATH_FILE" ]; then
     echo "Missing path.txt at $PATH_FILE"
     exit 1
 fi
 
-PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
+PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')\
 INSTALL_DIR="$PROJECT_ROOT/nginx"
 SRC_DIR="$PROJECT_ROOT/.nginx-src"
 NGINX_VERSION="1.25.3"
@@ -76,5 +76,4 @@ cd "$PROJECT_ROOT"
 
 echo ""
 echo "Nginx installed successfully to: $INSTALL_DIR"
-echo "To start Nginx with your config, run:"
-echo "  sudo bash start-nginx.sh"
+echo ""

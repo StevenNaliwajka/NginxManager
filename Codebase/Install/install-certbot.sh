@@ -3,9 +3,9 @@
 set -e
 
 # Resolve project path from path.txt
-PATH_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Config/path.txt"
+PATH_FILE="$SCRIPT_DIR/../../Config/default_path.txt"
 if [ ! -f "$PATH_FILE" ]; then
-    echo "path.txt not found at $PATH_FILE"
+    echo "default_path.txt not found at $PATH_FILE"
     exit 1
 fi
 

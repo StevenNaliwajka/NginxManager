@@ -3,37 +3,37 @@
 set -e
 
 # Read dynamic path
-PATH_FILE="Codebase/Config/path.txt"
+PATH_FILE="Config/default_path.txt"
 if [ ! -f "$PATH_FILE" ]; then
-    echo "path.txt not found at $PATH_FILE"
+    echo "default_path.txt not found at $PATH_FILE"
     exit 1
 fi
 
+# PATHING
 PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
-INSTALL_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/install-nginx.sh"
+INSTALL_NGINX="$PROJECT_ROOT/Codebase/Install/install-nginx.sh"
+INSTALL_CERTBOT="$PROJECT_ROOT/Codebase/Install/install-certbot.sh"
 NGINX_BIN="$PROJECT_ROOT/nginx/sbin/nginx"
-LOG_DIR="$PROJECT_ROOT/logs"
-GEN_NGINX="$PROJECT_ROOT/Codebase/Deploy/generate-nginx-conf.sh"
-GEN_SITES="$PROJECT_ROOT/Codebase/Deploy/generate-sites.sh"
-CERTBOT_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/install-certbot.sh"
-FIRST_TIME_CERT_SCRIPT="$PROJECT_ROOT/Codebase/Deploy/first-time-cert.sh"
-CHECK_CERTS_SCRIPT="$PROJECT_ROOT/check-certs.sh"
-START_SCRIPT="$PROJECT_ROOT/start-nginx.sh"
+CHECK_CERTS_SCRIPT="$PROJECT_ROOT/Codebase/check-certs.sh"
+DEPLOY_SCRIPT="$PROJECT_ROOT/Codebase/deploy.sh"
+START_SCRIPT="$PROJECT_ROOT/start.sh"
+FIRST_TIME_CERT="$PROJECT_ROOT/Codebase/first-time-certs.sh"
 
-CRON_JOB="0 1 * * * bash $CHECK_CERTS_SCRIPT >> $PROJECT_ROOT/logs/certbot.log 2>&1"
+CRON_JOB="0 1 */2 * * bash $CHECK_CERTS_SCRIPT >> $PROJECT_ROOT/logs/certbot.log 2>&1"
 
-echo ""
-echo "Starting full setup from: $PROJECT_ROOT"
 
-# Ensure logs directory exists
-echo "Ensuring log directory exists at: $LOG_DIR"
-mkdir -p "$LOG_DIR"
+if [ ! -f "./Config/domains.txt" ]; then
+    echo "domain,ip" > ./Config/domains.txt
+    echo "'Config/domains.txt' not found. A new one has been created."
+    echo "Go configure Config/domains.txt before continuing."
+    exit 1
+fi
 
 # Install Nginx if missing
 if [ ! -f "$NGINX_BIN" ]; then
     echo ""
     echo "Nginx binary not found — running installer..."
-    bash "$INSTALL_SCRIPT"
+    bash "$INSTALL_NGINX"
 else
     echo ""
     echo "Nginx already installed at: $NGINX_BIN"
@@ -45,16 +45,38 @@ if [ ! -x "$NGINX_BIN" ]; then
     exit 1
 fi
 
-# Generate configs
-echo ""
-echo "Generating dynamic configs..."
-bash "$GEN_NGINX"
-bash "$GEN_SITES"
-
-# Install Certbot system-wide
+# Install Certbot
 echo ""
 echo "Installing Certbot..."
-bash "$CERTBOT_SCRIPT"
+bash "$INSTALL_CERTBOT"
+
+# Build pages as HTTP ONLY
+echo ""
+echo "Building Reverse-Proxy Pages..."
+bash "$DEPLOY_SCRIPT" --phase init
+
+# Start Nginx
+echo ""
+echo "Start Nginx..."
+bash "$START_SCRIPT"
+
+# Get Certifications
+echo ""
+echo "Attempting to collect certifications..."
+bash "$FIRST_TIME_CERT"
+
+
+# Now Build pages /w FULL HTTPS
+echo ""
+echo "Building Reverse-Proxy Pages w/ HTTPS..."
+bash "$DEPLOY_SCRIPT" --phase full
+
+# Restart Nginx
+echo ""
+echo "Start Nginx..."
+bash "$START_SCRIPT"
+
+
 
 # Add cronjob if not already present
 echo ""
@@ -67,23 +89,3 @@ else
     echo "Adding daily cert renewal job to crontab..."
     (echo "$CURRENT_CRONTAB"; echo "$CRON_JOB") | crontab -
 fi
-
-echo ""
-echo "Setup complete!"
-echo "You can check certs at: /etc/letsencrypt/live/<your-domain>"
-echo ""
-
-# Ensure webroot for Certbot exists
-WEBROOT_DIR="$PROJECT_ROOT/Codebase/Website/.well-known/acme-challenge"
-echo ""
-echo "Ensuring webroot directory for Certbot exists at: $WEBROOT_DIR"
-mkdir -p "$WEBROOT_DIR"
-chmod -R 755 "$PROJECT_ROOT/Codebase/Website"
-
-echo "Running first-time certificate generation..."
-bash "$FIRST_TIME_CERT_SCRIPT" --staging
-
-echo ""
-echo "All done. If certificates were successfully obtained, you can run:"
-echo "  bash start-nginx.sh"
-echo "to start your final Nginx configuration."

@@ -1,0 +1,12 @@
+server {
+    listen 80;
+    server_name {{DOMAIN}};
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /opt/letsencrypt-challenges;
+    }
+
+    location / {
+        return 404;
+    }
+}

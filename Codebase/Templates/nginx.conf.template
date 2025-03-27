@@ -9,7 +9,7 @@ pid /tmp/nginx-local.pid;
 
 http {
     # Pull in MIME types from your local config
-    include       {{PROJECT_PATH}}/Codebase/Config/mime.types;
+    include       {{PROJECT_PATH}}/Codebase/Templates/mime.types;
     default_type  application/octet-stream;
 
     sendfile        on;
