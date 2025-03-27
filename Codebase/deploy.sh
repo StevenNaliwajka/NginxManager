@@ -43,6 +43,7 @@ echo "Using template: $TEMPLATE_PATH"
 echo ""
 
 FIRST_LINE=true
+SEEN=()
 
 while IFS=, read -r domain ip; do
     domain=$(echo "$domain" | xargs)
@@ -62,10 +63,27 @@ while IFS=, read -r domain ip; do
         continue
     fi
 
+    # Avoid generating config twice for same domain
+    if [[ " ${SEEN[*]} " =~ " $domain " ]]; then
+        continue
+    fi
+    SEEN+=("$domain")
+
+    # Build config for main domain
     output_file="$OUTPUT_DIR/$domain"
     echo "→ $domain ($ip)"
-
     sed "s/{{DOMAIN}}/$domain/g; s/{{IP}}/$ip/g" "$TEMPLATE_PATH" > "$output_file"
+
+    # If domain does not start with www., add www variant too
+    if [[ "$domain" != www.* ]]; then
+        www_domain="www.$domain"
+        if [[ ! " ${SEEN[*]} " =~ " $www_domain " ]]; then
+            www_output_file="$OUTPUT_DIR/$www_domain"
+            echo "→ $www_domain ($ip)"
+            sed "s/{{DOMAIN}}/$www_domain/g; s/{{IP}}/$ip/g" "$TEMPLATE_PATH" > "$www_output_file"
+            SEEN+=("$www_domain")
+        fi
+    fi
 done < "$DOMAINS_FILE"
 
 echo ""
