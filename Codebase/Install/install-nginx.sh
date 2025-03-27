@@ -11,8 +11,9 @@ if [ ! -f "$PATH_FILE" ]; then
     exit 1
 fi
 
-PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')\
+PROJECT_ROOT=$(cat "$PATH_FILE" | sed 's:/*$::')
 INSTALL_DIR="$PROJECT_ROOT/nginx"
+
 SRC_DIR="$PROJECT_ROOT/.nginx-src"
 NGINX_VERSION="1.25.3"
 
@@ -62,7 +63,7 @@ make install
 
 # Copy mime.types into Config/
 MIME_SRC="$INSTALL_DIR/conf/mime.types"
-MIME_DEST="$PROJECT_ROOT/Codebase/Config/mime.types"
+MIME_DEST="$PROJECT_ROOT/Config/mime.types"
 
 if [ -f "$MIME_SRC" ]; then
     echo "Copying mime.types to Config/"
