@@ -83,6 +83,10 @@ echo ""
 echo "Start Nginx..."
 bash "$START_SCRIPT"
 
+echo ""
+echo "Waiting for Nginx to fully boot and serve challenges..."
+sleep 5
+
 # Get Certifications
 echo ""
 echo "Attempting to collect certifications..."
