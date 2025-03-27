@@ -84,19 +84,18 @@ echo "Start Nginx..."
 bash "$START_SCRIPT"
 
 echo ""
-echo "Waiting for challenge path to become available..."
+echo "Waiting for challenge path to be externally reachable..."
+
+TOKEN_NAME="setup-test-$(date +%s)"
+echo "ready" | sudo tee /opt/letsencrypt-challenges/.well-known/acme-challenge/$TOKEN_NAME > /dev/null
 
 for i in {1..10}; do
-    echo "Checking .well-known... (try $i)"
-    echo "test-wait" | sudo tee /opt/letsencrypt-challenges/.well-known/acme-challenge/_waitcheck > /dev/null
-    sleep 1
-
-    if curl -s http://localhost/.well-known/acme-challenge/_waitcheck | grep -q "test-wait"; then
-        echo "Challenge path ready"
+    echo "Checking public access (try $i)..."
+    if curl -s "http://www.naliwajka.com/.well-known/acme-challenge/$TOKEN_NAME" | grep -q "ready"; then
+        echo "Public challenge path is working!"
         break
     fi
-
-    sleep 1
+    sleep 2
 done
 
 
