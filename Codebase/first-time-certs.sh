@@ -4,6 +4,8 @@ set -e
 
 export PATH="$PATH:$HOME/.local/bin:/root/.local/bin"
 
+CERTS_ISSUED=0
+
 # Config
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
@@ -81,6 +83,7 @@ while IFS=, read -r domain ip; do
 
     if [ $? -eq 0 ]; then
         echo "Certificate obtained for $domain"
+        CERTS_ISSUED=$((CERTS_ISSUED + 1))
     else
         echo "Failed to obtain certificate for $domain"
     fi
@@ -89,3 +92,11 @@ while IFS=, read -r domain ip; do
 done < "$DOMAINS_FILE"
 
 echo "Done processing all domains."
+
+if [ "$CERTS_ISSUED" -eq 0 ]; then
+    echo "No certificates were successfully issued."
+    exit 1
+else
+    echo "$CERTS_ISSUED certificate(s) were successfully issued."
+    exit 0
+fi
