@@ -6,7 +6,6 @@ server {
         alias /opt/letsencrypt-challenges/.well-known/acme-challenge/;
     }
 
-
     location / {
         return 404;
     }
