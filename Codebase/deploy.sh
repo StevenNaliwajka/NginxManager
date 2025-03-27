@@ -6,7 +6,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-TEMPLATE_DIR="$PROJECT_ROOT/Templates"
+TEMPLATE_DIR="$PROJECT_ROOT/Codebase/Templates"
 DOMAINS_FILE="$PROJECT_ROOT/Config/domains.txt"
 OUTPUT_DIR="$PROJECT_ROOT/sites-enabled"
 
