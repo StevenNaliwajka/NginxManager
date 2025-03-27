@@ -2,6 +2,9 @@
 
 set -e
 
+# Determine path relative to this script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Resolve project path from path.txt
 PATH_FILE="$SCRIPT_DIR/../../Config/default_path.txt"
 if [ ! -f "$PATH_FILE" ]; then
