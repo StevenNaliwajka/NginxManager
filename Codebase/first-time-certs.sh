@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export PATH="$PATH:$HOME/.local/bin:/root/.local/bin"
+
+
 DOMAINS_FILE="./Config/domains.txt"
 WEBROOT_PATH="/opt/letsencrypt-challenges"
 
