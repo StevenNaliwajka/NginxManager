@@ -4,7 +4,7 @@ server {
 
     # Allow HTTP access for Certbot
     location ^~ /.well-known/acme-challenge/ {
-        root /opt/letsencrypt-challenges;
+        alias /opt/letsencrypt-challenges/.well-known/acme-challenge/;
     }
 
     # Redirect everything else to HTTPS
