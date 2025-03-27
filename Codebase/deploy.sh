@@ -11,13 +11,12 @@ DOMAINS_FILE="$PROJECT_ROOT/Config/domains.txt"
 OUTPUT_DIR="$PROJECT_ROOT/sites-enabled"
 
 PHASE="$1"
+MODE="$2"
 
 if [[ "$PHASE" != "--phase" ]]; then
     echo "Usage: $0 --phase [init|full]"
     exit 1
 fi
-
-MODE="$2"
 
 if [[ "$MODE" != "init" && "$MODE" != "full" ]]; then
     echo "Error: phase must be 'init' or 'full'"
@@ -33,6 +32,11 @@ else
     TEMPLATE_PATH="$TEMPLATE_DIR/example.com.template"
 fi
 
+if [ ! -f "$TEMPLATE_PATH" ]; then
+    echo "Template not found at $TEMPLATE_PATH"
+    exit 1
+fi
+
 echo ""
 echo "Generating Nginx configs for phase: $MODE"
 echo "Using template: $TEMPLATE_PATH"
@@ -41,17 +45,19 @@ echo ""
 FIRST_LINE=true
 
 while IFS=, read -r domain ip; do
-    # Skip header if present
+    domain=$(echo "$domain" | xargs)
+    ip=$(echo "$ip" | xargs)
+
+    # Skip header row
     if $FIRST_LINE; then
         FIRST_LINE=false
         if [[ "$domain" == "domain" && "$ip" == "ip" ]]; then
+            echo "Skipping header: domain,ip"
             continue
         fi
     fi
 
-    domain=$(echo "$domain" | xargs)
-    ip=$(echo "$ip" | xargs)
-
+    # Skip empty or commented lines
     if [[ -z "$domain" || -z "$ip" || "$domain" == \#* ]]; then
         continue
     fi
