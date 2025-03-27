@@ -84,8 +84,21 @@ echo "Start Nginx..."
 bash "$START_SCRIPT"
 
 echo ""
-echo "Waiting for Nginx to fully boot and serve challenges..."
-sleep 5
+echo "Waiting for challenge path to become available..."
+
+for i in {1..10}; do
+    echo "Checking .well-known... (try $i)"
+    echo "test-wait" | sudo tee /opt/letsencrypt-challenges/.well-known/acme-challenge/_waitcheck > /dev/null
+    sleep 1
+
+    if curl -s http://localhost/.well-known/acme-challenge/_waitcheck | grep -q "test-wait"; then
+        echo "Challenge path ready"
+        break
+    fi
+
+    sleep 1
+done
+
 
 # Get Certifications
 echo ""
