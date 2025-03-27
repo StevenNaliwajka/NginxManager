@@ -18,6 +18,7 @@ CHECK_CERTS_SCRIPT="$PROJECT_ROOT/Codebase/check-certs.sh"
 DEPLOY_SCRIPT="$PROJECT_ROOT/Codebase/deploy.sh"
 START_SCRIPT="$PROJECT_ROOT/start.sh"
 FIRST_TIME_CERT="$PROJECT_ROOT/Codebase/first-time-certs.sh"
+NGINX_CONF_SCRIPT="$PROJECT_ROOT/Codebase/build-nginx-conf.sh"
 
 CRON_JOB="0 1 */2 * * bash $CHECK_CERTS_SCRIPT >> $PROJECT_ROOT/logs/certbot.log 2>&1"
 
@@ -45,6 +46,10 @@ if [ "$MISSING" = true ]; then
     exit 1
 fi
 
+# Build nginx Conf
+echo ""
+echo "Building Nginx Conf..."
+bash "$NGINX_CONF_SCRIPT"
 
 
 # Install Nginx if missing
