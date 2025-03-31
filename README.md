@@ -1,4 +1,4 @@
-# DynamicDNSManager
+# NginxDeployer
 Two modes
 ## host
 - Installs Nginx
