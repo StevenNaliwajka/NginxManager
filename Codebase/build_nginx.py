@@ -25,7 +25,6 @@ TEMPLATE_DIR = BASE_DIR / "Templates"
 OUTPUT_DIR = BASE_DIR.parent / "GeneratedConfs"
 CERTS_DIR = BASE_DIR.parent / "Certs"
 
-
 # Setup Jinja2
 env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
 
@@ -45,31 +44,40 @@ template_map = {
 for site in sites:
     domain = site["domain"]
     ssl_enabled = site.get("enable_ssl", False)
-    route_type = site["routes"][0]["type"]  # assumes single route for now
+    routes = site.get("routes", [])
 
-    # Cert handling
-    cert_path = None
-    if ssl_enabled:
-        cert_path = CERTS_DIR / domain
-        get_certificate_if_needed(site, cert_path, test_mode=test_mode)
+    for route in routes:
+        route_type = route["type"]
 
-    # Select and render template
-    template_name = template_map.get((route_type, ssl_enabled))
-    if not template_name:
-        print(f"[!] No template for site: {domain}")
-        continue
+        # Cert handling (only once per site)
+        cert_path = None
+        if ssl_enabled:
+            cert_path = CERTS_DIR / domain
+            get_certificate_if_needed(site, cert_path, test_mode=test_mode)
 
-    template = env.get_template(template_name)
-    rendered = template.render(
-        domain=domain,
-        routes=site["routes"],
-        cert_path=cert_path
-    )
+        # Fix target if it's a proxy route without scheme
+        if route_type == "proxy":
+            if not route["target"].startswith(("http://", "https://")):
+                print(f"[*] Auto-prepending 'http://' to target for {domain}")
+                route["target"] = f"http://{route['target']}"
 
-    # Write output config
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    output_file = OUTPUT_DIR / f"{domain}.conf"
-    with open(output_file, "w") as f:
-        f.write(rendered)
+        # Select and render template
+        template_name = template_map.get((route_type, ssl_enabled))
+        if not template_name:
+            print(f"[!] No template for site: {domain}")
+            continue
 
-    print(f"[+] Generated config for {domain} → {output_file}")
+        template = env.get_template(template_name)
+        rendered = template.render(
+            domain=domain,
+            routes=[route],
+            cert_path=cert_path
+        )
+
+        # Write output config
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        output_file = OUTPUT_DIR / f"{domain}.conf"
+        with open(output_file, "w") as f:
+            f.write(rendered)
+
+        print(f"[+] Generated config for {domain} → {output_file}")
