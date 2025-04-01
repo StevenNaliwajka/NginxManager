@@ -3,7 +3,7 @@ from pathlib import Path
 import shutil
 
 BASE_DIR = Path(__file__).resolve().parent
-CONFIG_DIR = BASE_DIR / "Config"
+CONFIG_DIR = BASE_DIR.parent / "Config"
 
 def get_certificate_if_needed(site, cert_path: Path, test_mode=False):
     domain = site["domain"]
