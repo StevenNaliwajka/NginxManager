@@ -20,10 +20,11 @@ test_mode = args.dry_run
 # Paths
 # -----------------------------
 BASE_DIR = Path(__file__).resolve().parent
-CONFIG_FILE = BASE_DIR / "Config/sites.json"
+CONFIG_FILE = BASE_DIR.parent / "Config/sites.json"
 TEMPLATE_DIR = BASE_DIR / "Setup/Templates"
-OUTPUT_DIR = BASE_DIR / "GeneratedConfigs"
-CERTS_DIR = BASE_DIR / "Certs"
+OUTPUT_DIR = BASE_DIR.parent / "GeneratedConfs"
+CERTS_DIR = BASE_DIR.parent / "Certs"
+
 
 # Setup Jinja2
 env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
