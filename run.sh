@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Exit on errors
+# Exit immediately on any error
 set -e
 
 echo "Running Nginx Deployer..."
 
-# Get project root and key paths
+# Define paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 VENV_PATH="$PROJECT_ROOT/venv"
@@ -14,7 +14,7 @@ GENERATED_DIR="$PROJECT_ROOT/GeneratedConfs"
 NGINX_AVAILABLE="/etc/nginx/sites-available"
 NGINX_ENABLED="/etc/nginx/sites-enabled"
 
-
+# Parse CLI flags
 DRY_RUN=false
 
 for arg in "$@"; do
@@ -29,29 +29,29 @@ for arg in "$@"; do
   esac
 done
 
-# Activate VENV
+# Activate Python virtual environment
 if [ ! -d "$VENV_PATH" ]; then
-  echo "venv not found at $VENV_PATH. Run setup_venv.sh first."
+  echo "Virtual environment not found at $VENV_PATH. Please run setup_venv.sh first."
   exit 1
 fi
 
-echo "Activating Python venv..."
+echo "Activating Python virtual environment..."
 source "$VENV_PATH/bin/activate"
 
-# Clean old configs
+# Clean and rebuild config files
 echo "Cleaning previously generated configs..."
 rm -rf "$GENERATED_DIR"
 mkdir -p "$GENERATED_DIR"
 
-echo "Building Nginx configuration files..."
+echo "Generating Nginx configuration files..."
 python "$BUILD_SCRIPT"
 
-# deploy if not dry run
+# Deploy configs unless dry run is specified
 if [ "$DRY_RUN" = true ]; then
-  echo "Dry run enabled — skipping deployment to Nginx."
-  echo "You can inspect configs in: $GENERATED_DIR"
+  echo "Dry run enabled. Skipping deployment."
+  echo "Generated configs can be found in: $GENERATED_DIR"
 else
-  echo "Deploying configs to Nginx..."
+  echo "Deploying configuration files to Nginx..."
 
   sudo mkdir -p "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 
@@ -60,15 +60,22 @@ else
 
     echo "Deploying: $filename"
 
-    # Remove old symlink if exists
+    # Remove existing files if they exist
     sudo rm -f "$NGINX_ENABLED/$filename"
+    sudo rm -f "$NGINX_AVAILABLE/$filename"
 
-    # Overwrite site-available file and re-link
+    # Copy and link new configs
     sudo cp "$file" "$NGINX_AVAILABLE/$filename"
     sudo ln -s "$NGINX_AVAILABLE/$filename" "$NGINX_ENABLED/$filename"
   done
 
-  echo "Testing and reloading Nginx..."
-  sudo nginx -t && sudo systemctl reload nginx
-  echo "Deployment complete."
+  echo "Testing Nginx configuration..."
+  if sudo nginx -t; then
+    echo "Reloading Nginx..."
+    sudo systemctl reload nginx
+    echo "Deployment completed successfully."
+  else
+    echo "Nginx configuration test failed. Aborting reload."
+    exit 1
+  fi
 fi
