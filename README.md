@@ -16,7 +16,7 @@
 ## Setup
 1) Clone repo
 ```bash
-git clone https://github.com/your-user/NginxManager.git
+git clone https://github.com/StevenNaliwajka/NginxManager
 cd NginxManager
 ```
 2) Run setup
