@@ -2,7 +2,7 @@ server {
     listen 80;
     server_name {{ domain }};
 
-    location {{ location }} {
+    location {{ location | default("/") | trim }} {
         proxy_pass {{ target }};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
