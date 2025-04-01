@@ -14,8 +14,12 @@ def get_certificate_if_needed(site, cert_path: Path, test_mode=False):
     wildcard = site.get("use_wildcard", False)
 
     if cert_path.exists() and not test_mode:
-        print(f"Certificate already exists for {domain}")
-        return
+        live_path = cert_path / "live"
+        if (live_path / "fullchain.pem").exists() and (live_path / "privkey.pem").exists():
+            print(f"Certificate already exists for {domain}")
+            return
+        else:
+            print(f"[!] Cert path exists but cert files are missing. Reissuing for {domain}...")
 
     if plugin == "dns-01":
         success = run_certbot_dns01(domain, email, dns_provider, cert_path, wildcard, test_mode)
