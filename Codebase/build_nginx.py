@@ -21,7 +21,7 @@ test_mode = args.dry_run
 # -----------------------------
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_FILE = BASE_DIR.parent / "Config/sites.json"
-TEMPLATE_DIR = BASE_DIR / "Setup/Templates"
+TEMPLATE_DIR = BASE_DIR / "Templates"
 OUTPUT_DIR = BASE_DIR.parent / "GeneratedConfs"
 CERTS_DIR = BASE_DIR.parent / "Certs"
 
