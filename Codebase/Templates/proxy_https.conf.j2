@@ -5,8 +5,8 @@ server {
     ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
 
-    location {{ location | default("/") | trim }} {
-        proxy_pass {{ target }};
+    location {{ routes[0].location | default("/") | trim }} {
+        proxy_pass {{ routes[0].target }};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
