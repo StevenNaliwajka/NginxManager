@@ -2,7 +2,7 @@ import json
 import argparse
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
-from ssl_manager import get_certificate_if_needed
+from Codebase.ssl_manager import get_certificate_if_needed
 
 # -----------------------------
 # Argument parsing

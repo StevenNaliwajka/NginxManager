@@ -1,5 +1,9 @@
-from Codebase.ssl_manager import get_certificate_if_needed
 from pathlib import Path
+
+import pytest
+
+from Codebase.ssl_manager import get_certificate_if_needed
+
 
 def test_cert_plugin_missing_email():
     site = {
@@ -9,7 +13,5 @@ def test_cert_plugin_missing_email():
         "dns_provider": "cloudflare"
     }
 
-    try:
+    with pytest.raises(ValueError, match="Missing cert_email"):
         get_certificate_if_needed(site, Path("/tmp"), test_mode=True)
-    except Exception as e:
-        assert isinstance(e, KeyError) or "email" in str(e)

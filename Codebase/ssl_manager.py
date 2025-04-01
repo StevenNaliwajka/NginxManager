@@ -21,6 +21,8 @@ def get_certificate_if_needed(site, cert_path: Path, test_mode=False):
             print(f"[!] Cert path exists but cert files are missing. Reissuing for {domain}...")
 
     if plugin == "dns-01":
+        if not email:
+            raise ValueError(f"Missing cert_email for domain '{domain}' using DNS-01 plugin.")
         success = run_certbot_dns01(domain, email, dns_provider, cert_path, wildcard, test_mode)
     elif plugin == "http-01":
         success = run_certbot_http01(domain, email, cert_path, test_mode)
