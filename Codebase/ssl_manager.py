@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 import shutil
+import os
 
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_DIR = BASE_DIR.parent / "Config"
@@ -25,6 +26,7 @@ def get_certificate_if_needed(site, cert_path: Path, test_mode=False):
         return
 
     if success and not test_mode:
+        symlink_cert_to_letsencrypt(domain, cert_path)
         reload_nginx()
 
 def run_certbot_dns01(domain, email, provider, cert_path, wildcard=False, test_mode=False):
@@ -83,6 +85,30 @@ def run_certbot_http01(domain, email, cert_path, test_mode=False):
 
     print(f"Requesting HTTP-01 cert for {domain}")
     return subprocess.run(cmd).returncode == 0
+
+def symlink_cert_to_letsencrypt(domain: str, cert_path: Path):
+    letsencrypt_live = Path(f"/etc/letsencrypt/live/{domain}")
+    source_live = cert_path / "live"
+    fullchain = source_live / "fullchain.pem"
+    privkey = source_live / "privkey.pem"
+
+    if not fullchain.exists() or not privkey.exists():
+        print(f"[!] Missing expected cert files in {source_live}")
+        return
+
+    try:
+        letsencrypt_live.mkdir(parents=True, exist_ok=True)
+
+        for file_name in ["fullchain.pem", "privkey.pem"]:
+            src = source_live / file_name
+            dest = letsencrypt_live / file_name
+            if dest.exists() or dest.is_symlink():
+                dest.unlink()
+            os.symlink(src, dest)
+
+        print(f"[+] Symlinked certs for {domain} → /etc/letsencrypt/live/{domain}")
+    except PermissionError:
+        print(f"[!] Permission denied: could not symlink to /etc/letsencrypt/live/{domain}")
 
 def reload_nginx():
     print("Reloading Nginx...")
