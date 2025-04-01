@@ -1,4 +1,5 @@
 from Codebase.ssl_manager import get_certificate_if_needed
+from pathlib import Path
 
 def test_unknown_cert_plugin(monkeypatch):
     site = {
@@ -14,6 +15,6 @@ def test_unknown_cert_plugin(monkeypatch):
 
     monkeypatch.setattr("Codebase.ssl_manager.reload_nginx", fake_reload)
 
-    get_certificate_if_needed(site, cert_path=None, test_mode=True)
+    get_certificate_if_needed(site, cert_path=Path("/tmp/fake_cert_path"), test_mode=True)
 
     assert not reloaded, "Nginx should not reload for invalid cert plugin"

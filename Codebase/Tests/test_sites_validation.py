@@ -1,7 +1,7 @@
-import json
 from pathlib import Path
+import json
 
-SITES_FILE = Path("../Config/sites.json")
+SITES_FILE = Path(__file__).resolve().parents[2] / "Config/sites.json"
 
 def test_sites_json_valid_structure():
     with open(SITES_FILE) as f:
