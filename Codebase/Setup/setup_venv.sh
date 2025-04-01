@@ -4,7 +4,7 @@ echo "Setting up Python virtual environment..."
 
 # Resolve script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$SCRIPT_DIR/../../.."
+PROJECT_ROOT="$SCRIPT_DIR/../.."
 VENV_DIR="$PROJECT_ROOT/venv"
 REQUIREMENTS_FILE="$SCRIPT_DIR/requirements.txt"
 
