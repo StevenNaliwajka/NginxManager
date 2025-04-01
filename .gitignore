@@ -174,10 +174,5 @@ cython_debug/
 .pypirc
 .idea
 
-Codebase/Sites/sites-available
-!Codebase/Sites/sites-available/example.com.template
-nginx
-mime.types
-Codebase/Config/nginx.conf
-Config/domains.txt
-Config/email.txt
+Config/*
+logs/
