@@ -1,6 +1,5 @@
 import subprocess
 from pathlib import Path
-import shutil
 import os
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -92,7 +91,7 @@ def run_certbot_http01(domain, email, cert_path, test_mode=False):
 
 def symlink_cert_to_letsencrypt(domain: str, cert_path: Path):
     letsencrypt_live = Path(f"/etc/letsencrypt/live/{domain}")
-    source_live = cert_path / "live"
+    source_live = cert_path / "live" / domain
     fullchain = source_live / "fullchain.pem"
     privkey = source_live / "privkey.pem"
 

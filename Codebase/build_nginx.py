@@ -78,6 +78,7 @@ for site in sites:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         output_file = OUTPUT_DIR / f"{domain}.conf"
         with open(output_file, "w") as f:
+            f.write("# Managed by NginxDeployer\n")
             f.write(rendered)
 
         print(f"[+] Generated config for {domain} → {output_file}")

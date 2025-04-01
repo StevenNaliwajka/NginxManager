@@ -46,6 +46,16 @@ mkdir -p "$GENERATED_DIR"
 echo "Generating Nginx configuration files..."
 python "$BUILD_SCRIPT"
 
+echo "Cleaning out old Nginx site configs..."
+for file in "$NGINX_AVAILABLE"/*.conf; do
+  if grep -q "# Managed by NginxDeployer" "$file"; then
+    filename=$(basename "$file")
+    echo "Removing: $filename"
+    sudo rm -f "$NGINX_AVAILABLE/$filename"
+    sudo rm -f "$NGINX_ENABLED/$filename"
+  fi
+done
+
 # Deploy configs unless dry run is specified
 if [ "$DRY_RUN" = true ]; then
   echo "Dry run enabled. Skipping deployment."
