@@ -11,28 +11,33 @@ Infrastructure as Code (IaC) style Nginx deployer + Cerbot manager
 - One-line setup and deployment
 - Dry run mode for previewing configs
 - Easy to version and replicate deployments
+--------------
 
-
-## Setup
-1) Clone repo
+## Setup:
+1) Clone repo. Must be cloned out of root(/~/) for proper function.   
+/opt/ suggested.
 ```bash
-git clone https://github.com/StevenNaliwajka/NginxManager
-cd NginxManager
+sudo git clone https://github.com/StevenNaliwajka/NginxManager /opt/NginxManager
+cd /opt/NginxManager
 ```
 2) Run setup
 ```bash
-bash setup.sh
+sudo bash setup.sh
 ```
 3) Update data in ./Config/sites.json to match your intended use.
-4) Run the program
 ```bash
-bash run.sh
+sudo nano /Config/site.json
+```
+
+## Run:
+1) Run the program
+```bash
+sudo bash run.sh
 ```
 
 
-## Other Scripts
-
+## Other Scripts:
 - Stop - stops the program
 ```bash
-bash stop.sh
+sudo bash stop.sh
 ```
