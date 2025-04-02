@@ -1,5 +1,5 @@
 # Nginx Deployer
-
+Infrastructure as Code (IaC) style Nginx deployer
 
 ## What's it used for?
 
