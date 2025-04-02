@@ -1,5 +1,5 @@
 # Nginx Deployer
-Infrastructure as Code (IaC) style Nginx deployer
+Infrastructure as Code (IaC) style Nginx deployer + Cerbot manager
 
 ## What's it used for?
 
