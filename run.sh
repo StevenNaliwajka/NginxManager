@@ -44,7 +44,7 @@ rm -rf "$GENERATED_DIR"
 mkdir -p "$GENERATED_DIR"
 
 echo "Generating Nginx configuration files..."
-python "$BUILD_SCRIPT"
+PYTHONPATH="$PROJECT_ROOT" python "$BUILD_SCRIPT"
 
 echo "Cleaning out old Nginx site configs..."
 
