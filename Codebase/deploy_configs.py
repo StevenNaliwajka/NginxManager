@@ -64,16 +64,16 @@ def deploy_configs(dry_run=False):
         return
 
     # Step 4: Reload Nginx (or start if not running)
-    if not is_nginx_active():
-        print("Nginx is not running.")
+    if is_nginx_active():
+        print("Reloading Nginx...")
+        try:
+            subprocess.run(["systemctl", "reload", "nginx"], check=True)
+            print("Nginx reloaded successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to reload Nginx: {e}")
+    else:
+        print("Nginx is not running. Attempting to start...")
         start_nginx()
-
-    print("Reloading Nginx...")
-    try:
-        subprocess.run(["systemctl", "reload", "nginx"], check=True)
-        print("Nginx reloaded successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to reload Nginx: {e}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Deploy generated Nginx configs.")
