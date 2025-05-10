@@ -15,7 +15,7 @@ def is_nginx_active():
     return active == "active"
 
 def start_nginx():
-    print("Starting Nginx...")
+    print("[DEBUG] start_nginx() called.")
     try:
         subprocess.run(["systemctl", "start", "nginx"], check=True)
         print("Nginx started successfully.")
