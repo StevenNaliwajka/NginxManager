@@ -2,8 +2,8 @@ server {
     listen 443 ssl;
     server_name {{ domain }};
 
-    ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+    ssl_certificate {{ cert_path }}/live/{{ domain | lower }}/fullchain.pem;
+    ssl_certificate_key {{ cert_path }}/live/{{ domain | lower }}/privkey.pem;
 
     location {{ routes[0].location | default("/") | trim }} {
         proxy_pass {{ routes[0].target }};
