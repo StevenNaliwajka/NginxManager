@@ -5,7 +5,7 @@ echo "Installing Porkbun DNS plugin inside virtual environment..."
 # Get script location and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR/../../../"
-VENV_PATH="$PROJECT_ROOT/venv"
+VENV_PATH="$PROJECT_ROOT/.venv"
 
 # Ensure venv exists
 if [ ! -d "$VENV_PATH" ]; then

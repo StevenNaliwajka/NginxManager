@@ -5,7 +5,7 @@ echo "Installing Cloudflare DNS plugin..."
 # Get project root relative to this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR/../../../"
-VENV_PATH="$PROJECT_ROOT/venv"
+VENV_PATH="$PROJECT_ROOT/.venv"
 
 # Ensure venv exists
 if [ ! -d "$VENV_PATH" ]; then
