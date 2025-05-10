@@ -9,10 +9,15 @@ NGINX_ENABLED_DIR = Path("/etc/nginx/sites-enabled")
 BUILD_SCRIPT = BASE_DIR / "build_nginx.py"
 
 def is_nginx_active():
-    result = subprocess.run(["systemctl", "is-active", "nginx"], capture_output=True, text=True)
-    active = result.stdout.strip()
-    print(f"[DEBUG] systemctl is-active nginx → {active}")
-    return active == "active"
+    result = subprocess.run(
+        ["systemctl", "show", "nginx", "--property=SubState"],
+        capture_output=True,
+        text=True
+    )
+    state_line = result.stdout.strip()
+    print(f"[DEBUG] Nginx SubState → {state_line}")
+    return "SubState=running" in state_line
+
 
 def start_nginx():
     print("[DEBUG] start_nginx() called.")
@@ -81,6 +86,7 @@ def deploy_configs(dry_run=False):
     status = subprocess.run(["systemctl", "status", "nginx"], capture_output=True, text=True)
     print("--- Nginx Status ---")
     print(status.stdout)
+
 
 
 if __name__ == "__main__":
