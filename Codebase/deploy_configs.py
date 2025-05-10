@@ -10,7 +10,9 @@ BUILD_SCRIPT = BASE_DIR / "build_nginx.py"
 
 def is_nginx_active():
     result = subprocess.run(["systemctl", "is-active", "nginx"], capture_output=True, text=True)
-    return result.stdout.strip() == "active"
+    active = result.stdout.strip()
+    print(f"[DEBUG] systemctl is-active nginx → {active}")
+    return active == "active"
 
 def start_nginx():
     print("Starting Nginx...")
