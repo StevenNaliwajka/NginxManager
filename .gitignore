@@ -176,3 +176,8 @@ cython_debug/
 
 Config/*
 logs/
+Certs/
+GeneratedConfs
+Logs
+Utils
+Config

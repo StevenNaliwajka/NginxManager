@@ -49,10 +49,18 @@ def build_configs(test_mode=False):
                 continue
 
             template = env.get_template(template_name)
+
+            # Determine root path (for host type)
+            if route_type == "host":
+                target = route.get("target") or f"/var/www/{domain}/html"
+            else:
+                target = None
+
             rendered = template.render(
                 domain=domain,
                 routes=[route],
-                cert_path=cert_path
+                cert_path=cert_path,
+                target=target
             )
 
             OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

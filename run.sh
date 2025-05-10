@@ -8,7 +8,7 @@ echo "Running Nginx Deployer..."
 # Define paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
-VENV_PATH="$PROJECT_ROOT/venv"
+VENV_PATH="$PROJECT_ROOT/.venv"
 BUILD_SCRIPT="$PROJECT_ROOT/Codebase/build_nginx.py"
 GENERATED_DIR="$PROJECT_ROOT/GeneratedConfs"
 NGINX_AVAILABLE="/etc/nginx/sites-available"
