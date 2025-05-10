@@ -10,14 +10,12 @@ BUILD_SCRIPT = BASE_DIR / "build_nginx.py"
 
 def is_nginx_active():
     result = subprocess.run(
-        ["systemctl", "show", "nginx", "--property=SubState"],
+        ["systemctl", "is-active", "nginx"],
         capture_output=True,
         text=True
     )
-    state_line = result.stdout.strip()
-    print(f"[DEBUG] Nginx SubState → {state_line}")
-    return "SubState=running" in state_line
-
+    print(f"[DEBUG] Nginx status → {result.stdout.strip()}")
+    return result.stdout.strip() == "active"
 
 def start_nginx():
     print("[DEBUG] start_nginx() called.")
@@ -50,27 +48,30 @@ def deploy_configs(dry_run=False):
             print(f"[DRY] Would link {conf_file} → {target_link}")
         else:
             try:
+                if target_link.exists() or target_link.is_symlink():
+                    print(f"Replacing existing link: {target_link}")
+                    target_link.unlink()
                 target_link.symlink_to(conf_file.resolve())
-                print(f"[+] Linked {conf_file.name} → {target_link}")
-            except FileExistsError:
-                print(f"Replacing existing link: {target_link}")
-                target_link.unlink()
-                target_link.symlink_to(conf_file.resolve())
+                print(f"Linked {conf_file.name} → {target_link}")
+            except Exception as e:
+                print(f"Failed to create symlink: {e}")
+                continue
 
     # Step 3: Test Nginx config
     print("Testing Nginx configuration...")
     result = subprocess.run(["nginx", "-t"], capture_output=True, text=True)
-
     if result.returncode != 0:
         print("Nginx config test failed:")
         print(result.stderr)
         return
+    else:
+        print("Nginx configuration test passed.")
 
     if dry_run:
-        print("[DRY] Skipping Nginx reload (dry-run mode).")
+        print("Skipping Nginx reload (dry-run mode).")
         return
 
-    # Step 4: Reload Nginx (or start if not running)
+    # Step 4: Reload or start Nginx
     if is_nginx_active():
         print("Reloading Nginx...")
         try:
@@ -83,10 +84,9 @@ def deploy_configs(dry_run=False):
         start_nginx()
 
     # Final confirmation
-    status = subprocess.run(["systemctl", "status", "nginx"], capture_output=True, text=True)
     print("--- Nginx Status ---")
+    status = subprocess.run(["systemctl", "status", "nginx"], capture_output=True, text=True)
     print(status.stdout)
-
 
 
 if __name__ == "__main__":
