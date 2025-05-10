@@ -75,6 +75,12 @@ def deploy_configs(dry_run=False):
         print("Nginx is not running. Attempting to start...")
         start_nginx()
 
+    # Final confirmation
+    status = subprocess.run(["systemctl", "status", "nginx"], capture_output=True, text=True)
+    print("--- Nginx Status ---")
+    print(status.stdout)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Deploy generated Nginx configs.")
     parser.add_argument("--dry-run", action="store_true", help="Simulate cert + config generation and deployment.")
