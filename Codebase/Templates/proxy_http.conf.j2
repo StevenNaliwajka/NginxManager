@@ -2,9 +2,11 @@ server {
     listen 80;
     server_name {{ domain }};
 
-    location {{ routes[0].location | default("/") | trim }} {
-        proxy_pass {{ routes[0].target }};
+    {% for route in routes %}
+    location {{ route.location | trim }} {
+        proxy_pass {{ route.target }};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
+    {% endfor %}
 }

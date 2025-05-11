@@ -29,47 +29,42 @@ def build_configs(test_mode=False):
         ssl_enabled = site.get("enable_ssl", False)
         routes = site.get("routes", [])
 
+        cert_path = None
+        if ssl_enabled:
+            cert_path = CERTS_DIR / domain
+            get_certificate_if_needed(site, cert_path, test_mode=test_mode)
+
+        # Normalize route targets
         for route in routes:
-            route_type = route["type"]
-
-            # Cert handling
-            cert_path = None
-            if ssl_enabled:
-                cert_path = CERTS_DIR / domain
-                get_certificate_if_needed(site, cert_path, test_mode=test_mode)
-
-            # Fix target if proxy missing scheme
-            if route_type == "proxy" and not route["target"].startswith(("http://", "https://")):
-                print(f"[*] Auto-prepending 'http://' to target for {domain}")
+            if route["type"] == "proxy" and not route["target"].startswith(("http://", "https://")):
+                print(f"Auto-prepending 'http://' to target for {domain}")
                 route["target"] = f"http://{route['target']}"
 
-            template_name = template_map.get((route_type, ssl_enabled))
-            if not template_name:
-                print(f"[!] No template for site: {domain}")
-                continue
+        # Load appropriate template once
+        route_type = routes[0]["type"] if routes else "proxy"
+        template_name = template_map.get((route_type, ssl_enabled))
+        if not template_name:
+            print(f"No template for site: {domain}")
+            continue
 
-            template = env.get_template(template_name)
+        template = env.get_template(template_name)
 
-            # Determine root path (for host type)
-            if route_type == "host":
-                target = route.get("target") or f"/var/www/{domain}/html"
-            else:
-                target = None
+        # Render entire config with all routes
+        rendered = template.render(
+            domain=domain,
+            routes=routes,
+            cert_path=cert_path,
+            target=None  # Not used for proxy
+        )
 
-            rendered = template.render(
-                domain=domain,
-                routes=[route],
-                cert_path=cert_path,
-                target=target
-            )
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        output_file = OUTPUT_DIR / f"{domain}.conf"
+        with open(output_file, "w") as f:
+            f.write("# Managed by NginxDeployer\n")
+            f.write(rendered)
 
-            OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-            output_file = OUTPUT_DIR / f"{domain}.conf"
-            with open(output_file, "w") as f:
-                f.write("# Managed by NginxDeployer\n")
-                f.write(rendered)
+        print(f"Generated config for {domain} → {output_file}")
 
-            print(f"[+] Generated config for {domain} → {output_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build Nginx configs from sites.json")
