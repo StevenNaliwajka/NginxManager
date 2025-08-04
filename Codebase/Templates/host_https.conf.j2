@@ -1,18 +1,11 @@
-# Redirect HTTP → HTTPS
+# HTTP → HTTPS redirect (bare + www)
 server {
     listen 80;
     server_name {{ all_domains | join(' ') }};
     return 301 https://{{ all_domains[1] }}$request_uri;
 }
 
-# Also catch the bare domain explicitly
-server {
-    listen 80;
-    server_name {{ all_domains[0] }};
-    return 301 https://{{ all_domains[1] }}$request_uri;
-}
-
-# Redirect bare → www over HTTPS
+# HTTPS bare → www redirect
 server {
     listen 443 ssl;
     server_name {{ all_domains[0] }};
@@ -21,10 +14,10 @@ server {
     return 301 https://{{ all_domains[1] }}$request_uri;
 }
 
-# Main HTTPS site
+# Main HTTPS site for www
 server {
     listen 443 ssl;
-    server_name {{ all_domains | join(' ') }};
+    server_name {{ all_domains[1] }};
 
     ssl_certificate {{ cert_path }}/live/{{ all_domains[0] | lower }}/fullchain.pem;
     ssl_certificate_key {{ cert_path }}/live/{{ all_domains[0] | lower }}/privkey.pem;

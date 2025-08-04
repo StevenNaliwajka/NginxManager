@@ -1,14 +1,12 @@
-# Redirect bare → www
-server {
-    listen 80;
-    server_name {{ all_domains[0] }};
-    return 301 http://{{ all_domains[1] }}$request_uri;
-}
-
-# Main site
+# HTTP-only site (bare + www)
 server {
     listen 80;
     server_name {{ all_domains | join(' ') }};
+
+    # Redirect bare → www
+    if ($host = {{ all_domains[0] }}) {
+        return 301 http://{{ all_domains[1] }}$request_uri;
+    }
 
     root {{ target }};
     index index.html index.htm;
