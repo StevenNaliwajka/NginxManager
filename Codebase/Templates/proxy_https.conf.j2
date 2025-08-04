@@ -5,6 +5,13 @@ server {
     return 301 https://{{ all_domains[1] }}$request_uri;
 }
 
+# Also catch the bare domain explicitly
+server {
+    listen 80;
+    server_name {{ all_domains[0] }};
+    return 301 https://{{ all_domains[1] }}$request_uri;
+}
+
 # Redirect bare → www over HTTPS
 server {
     listen 443 ssl;
