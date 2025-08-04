@@ -1,9 +1,19 @@
+# Redirect bare → www
 server {
     listen 443 ssl;
-    server_name {{ domain }};
+    server_name {{ all_domains[0] }};
+    ssl_certificate {{ cert_path }}/live/{{ all_domains[0] | lower }}/fullchain.pem;
+    ssl_certificate_key {{ cert_path }}/live/{{ all_domains[0] | lower }}/privkey.pem;
+    return 301 https://{{ all_domains[1] }}$request_uri;
+}
 
-    ssl_certificate {{ cert_path }}/live/{{ domain | lower }}/fullchain.pem;
-    ssl_certificate_key {{ cert_path }}/live/{{ domain | lower }}/privkey.pem;
+# Main site
+server {
+    listen 443 ssl;
+    server_name {{ all_domains | join(' ') }};
+
+    ssl_certificate {{ cert_path }}/live/{{ all_domains[0] | lower }}/fullchain.pem;
+    ssl_certificate_key {{ cert_path }}/live/{{ all_domains[0] | lower }}/privkey.pem;
 
     root {{ target }};
     index index.html index.htm;

@@ -7,6 +7,8 @@ CONFIG_DIR = BASE_DIR.parent / "Config"
 
 def get_certificate_if_needed(site, cert_path: Path, test_mode=False):
     domain = site["domain"]
+    # default to single if not provided
+    all_domains = site.get("all_domains", [domain])
     email = site.get("cert_email")
     plugin = site.get("cert_plugin")
     dns_provider = site.get("dns_provider")
@@ -23,18 +25,21 @@ def get_certificate_if_needed(site, cert_path: Path, test_mode=False):
     if plugin == "dns-01":
         if not email:
             raise ValueError(f"Missing cert_email for domain '{domain}' using DNS-01 plugin.")
-        success = run_certbot_dns01(domain, email, dns_provider, cert_path, wildcard, test_mode)
+        success = run_certbot_dns01(site, email, dns_provider, cert_path, wildcard, test_mode)
     elif plugin == "http-01":
-        success = run_certbot_http01(domain, email, cert_path, test_mode)
+        success = run_certbot_http01(site, email, cert_path, test_mode)
     else:
         print(f"[!] Unknown cert plugin '{plugin}' for {domain}")
         return
 
     if success and not test_mode:
-        symlink_cert_to_letsencrypt(domain, cert_path)
+        symlink_cert_to_letsencrypt(domain, cert_path, all_domains)
         reload_nginx()
 
-def run_certbot_dns01(domain, email, provider, cert_path, wildcard=False, test_mode=False):
+def run_certbot_dns01(site, email, provider, cert_path, wildcard=False, test_mode=False):
+    domain = site["domain"]
+    all_domains = site.get("all_domains", [domain])
+
     creds_map = {
         "cloudflare": ("--dns-cloudflare", CONFIG_DIR / "cloudflare.ini"),
         "porkbun": ("--dns-porkbun", CONFIG_DIR / "porkbun.ini"),
@@ -46,9 +51,11 @@ def run_certbot_dns01(domain, email, provider, cert_path, wildcard=False, test_m
 
     plugin_flag, creds_file = creds_map[provider]
 
-    domains = [f"-d {domain}"]
+    domains = []
+    for d in all_domains:
+        domains.extend(["-d", d])
     if wildcard:
-        domains.append(f"-d *.{domain.lstrip('*.')}")
+        domains.extend(["-d", f"*.{domain.lstrip('*.')}"])
 
     cmd = [
         "certbot", "certonly",
@@ -68,10 +75,14 @@ def run_certbot_dns01(domain, email, provider, cert_path, wildcard=False, test_m
     if test_mode:
         cmd.insert(1, "--dry-run")
 
-    print(f"Requesting DNS-01 cert for {domain} ({'wildcard' if wildcard else 'standard'})")
+    print(f"Requesting DNS-01 cert for {', '.join(all_domains)} ({'wildcard' if wildcard else 'standard'})")
     return subprocess.run(cmd).returncode == 0
 
-def run_certbot_http01(domain, email, cert_path, test_mode=False):
+
+def run_certbot_http01(site, email, cert_path, test_mode=False):
+    domain = site["domain"]
+    all_domains = site.get("all_domains", [domain])
+
     cmd = [
         "certbot", "certonly",
         "--standalone",
@@ -79,20 +90,24 @@ def run_certbot_http01(domain, email, cert_path, test_mode=False):
         "--agree-tos",
         "--preferred-challenges", "http",
         "--email", email,
-        "-d", domain,
+    ]
+    for d in all_domains:
+        cmd.extend(["-d", d])
+    cmd.extend([
         "--config-dir", str(cert_path),
         "--work-dir", str(cert_path / "work"),
         "--logs-dir", str(cert_path / "logs"),
-    ]
+    ])
 
     if test_mode:
         cmd.insert(1, "--dry-run")
 
-    print(f"Requesting HTTP-01 cert for {domain}")
+    print(f"Requesting HTTP-01 cert for {', '.join(all_domains)}")
     return subprocess.run(cmd).returncode == 0
 
-def symlink_cert_to_letsencrypt(domain: str, cert_path: Path):
-    letsencrypt_live = Path(f"/etc/letsencrypt/live/{domain}")
+def symlink_cert_to_letsencrypt(domain: str, cert_path: Path, all_domains=None):
+    target_domain = all_domains[0] if all_domains else domain
+    letsencrypt_live = Path(f"/etc/letsencrypt/live/{target_domain}")
     source_live = cert_path / "live" / domain
     fullchain = source_live / "fullchain.pem"
     privkey = source_live / "privkey.pem"
@@ -111,9 +126,10 @@ def symlink_cert_to_letsencrypt(domain: str, cert_path: Path):
                 dest.unlink()
             os.symlink(src, dest)
 
-        print(f"[+] Symlinked certs for {domain} → /etc/letsencrypt/live/{domain}")
+        print(f"[+] Symlinked certs for {', '.join(all_domains) if all_domains else domain} → /etc/letsencrypt/live/{target_domain}")
     except PermissionError:
-        print(f"[!] Permission denied: could not symlink to /etc/letsencrypt/live/{domain}")
+        print(f"[!] Permission denied: could not symlink to /etc/letsencrypt/live/{target_domain}")
+
 
 def reload_nginx():
     print("Reloading Nginx...")

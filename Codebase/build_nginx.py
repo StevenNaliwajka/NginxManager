@@ -12,6 +12,14 @@ template_map = {
     ("proxy", True):  "proxy_https.conf.j2",
 }
 
+def normalize_domains(domain: str):
+    """Returns (bare_domain, www_domain)."""
+    if domain.startswith("www."):
+        bare = domain[4:]
+        return bare, domain
+    else:
+        return domain, f"www.{domain}"
+
 def build_configs(test_mode=False):
     BASE_DIR = Path(__file__).resolve().parent
     CONFIG_FILE = BASE_DIR.parent / "Config/sites.json"
@@ -26,12 +34,17 @@ def build_configs(test_mode=False):
 
     for site in sites:
         domain = site["domain"]
+        bare_domain, www_domain = normalize_domains(domain)
+        all_domains = [bare_domain, www_domain]
         ssl_enabled = site.get("enable_ssl", False)
         routes = site.get("routes", [])
 
         cert_path = None
         if ssl_enabled:
-            cert_path = CERTS_DIR / domain
+            # store certs under bare domain
+            cert_path = CERTS_DIR / bare_domain
+            # pass www. and bare domains to cert manager
+            site["all_domains"] = all_domains
             get_certificate_if_needed(site, cert_path, test_mode=test_mode)
 
         # Normalize route targets
@@ -52,9 +65,10 @@ def build_configs(test_mode=False):
         # Render entire config with all routes
         rendered = template.render(
             domain=domain,
+            all_domains=all_domains,
             routes=routes,
             cert_path=cert_path,
-            target=None  # Not used for proxy
+            target=None
         )
 
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

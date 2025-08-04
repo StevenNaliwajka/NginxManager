@@ -1,6 +1,14 @@
+# Redirect bare → www
 server {
     listen 80;
-    server_name {{ domain }};
+    server_name {{ all_domains[0] }};
+    return 301 http://{{ all_domains[1] }}$request_uri;
+}
+
+# Main site
+server {
+    listen 80;
+    server_name {{ all_domains | join(' ') }};
 
     {% for route in routes %}
     location {{ route.location | trim }} {
