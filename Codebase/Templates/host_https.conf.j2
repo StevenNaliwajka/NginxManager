@@ -1,4 +1,11 @@
-# Redirect bare → www
+# Redirect HTTP → HTTPS
+server {
+    listen 80;
+    server_name {{ all_domains | join(' ') }};
+    return 301 https://{{ all_domains[1] }}$request_uri;
+}
+
+# Redirect bare → www over HTTPS
 server {
     listen 443 ssl;
     server_name {{ all_domains[0] }};
@@ -7,7 +14,7 @@ server {
     return 301 https://{{ all_domains[1] }}$request_uri;
 }
 
-# Main site
+# Main HTTPS site
 server {
     listen 443 ssl;
     server_name {{ all_domains | join(' ') }};
